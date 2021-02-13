@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>mvm</title>
+</head>
+
+<body>
+	<link rel="stylesheet" href="./css/github-markdown.css" />
+	<link rel="stylesheet" href="./css/mvmEditor.css" />
+	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+	<link rel="stylesheet"
+  	href="./css/hljs.default.min.css">
+	<script src="./js/highlight.min.js"></script>
+	<script src="./js/purify.min.js"></script>
+	<script src="./js/marked.min.js"></script>
+	<script type="text/javascript" src="./js/monaco-editor/min/vs/loader.js"></script>
+	<script src="./js/turndown.js"></script>
+	<script src="./js/mvmEditor.js"></script>
+	<script>
+		const ed = new mvmEditor({
+			dom: "#mvmEditor",
+			uploadurl : "https://test",
+			editorurl:"http://127.0.0.1:5500"
+		});
+		const tet = new mvmEditor({
+			dom: "#mvmEditor2",
+			uploadurl : "https://test",
+			editorurl:"http://127.0.0.1:5500"
+		});
+	</script>
+	<div>
+		<div id="mvmEditor"></div>
+		<div id="mvmEditor2"></div>		
+	</div>
+	<script>
+		/*
+		require.config({
+			paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor/min/vs" }
+		});
+
+		var editor;
+		var monaco;
+		var defaultValue = '## 마크다운\r\n ```javascript\r\ntest\r\n```';
+		require(['vs/editor/editor.main'], function () {
+			monaco = monaco;
+			editor = monaco.editor.create(document.getElementById('container'), {
+				//theme: 'vs-dark',
+				theme: "vs",
+				fontFamily: 'Nanum Gothic Coding',
+				automaticLayout: true,
+				value: defaultValue,
+				//language: 'javascript'
+				language: 'markdown',
+				//readOnly: true,
+				minimap: { enabled: false },
+				automaticLayout: true,
+				scrollBeyondLastLine: false
+			});
+			window.addEventListener('paste', (e) => {
+				const items = e.clipboardData.files;
+				for (let i = 0; i < items.length; i++) {
+					const matches = items[i].type.match(/^image\/(png|jpg|jpeg|gif)$/i)
+					const selection = editor.getSelection();
+					pastePosition = e;
+					const range = new monaco.Range(
+						this.pastePosition.startLineNumber || selection.endLineNumber,
+						this.pastePosition.startColumn || selection.endColumn,
+						this.pastePosition.endLineNumber || selection.endLineNumber,
+						this.pastePosition.endColumn || selection.endColumn,
+					);
+					if (matches) {
+						const file = items[i]
+						editor.executeEdits("", [
+							{
+								range: new monaco.Range(selection.endLineNumber, selection.endColumn, selection.endLineNumber, selection.endColumn),
+								text: `![image](https://ucarecdn.com/05f649bf-b70b-4cf8-90f7-2588ce404a08/-/resize/680x/-/quality/lightest/-/format/auto/)`
+							}
+						])
+						const { endLineNumber, endColumn } = editor.getSelection()
+						editor.setPosition({ lineNumber: endLineNumber, column: endColumn })
+					}
+				}
+			});
+			editor.onDidChangeModelContent((e) => {
+				const html = marked(editor.getValue());
+				const sanitized = DOMPurify.sanitize(html);
+				document.getElementById('preview').innerHTML = sanitized;
+				//const tokens = marked.lexer(value);
+				//const html = marked.parser(tokens);
+			});
+			editor.onDidPaste((e) => {
+				const selection = editor.getSelection();
+				pastePosition = e;
+				const range = new monaco.Range(
+					this.pastePosition.startLineNumber || selection.endLineNumber,
+					this.pastePosition.startColumn || selection.endColumn,
+					this.pastePosition.endLineNumber || selection.endLineNumber,
+					this.pastePosition.endColumn || selection.endColumn,
+				);
+				//editor.executeEdits( '', [ { range, text: 'dfdf' } ] );
+			});
+			editor.onKeyUp((e) => {
+			})
+			const html = marked(editor.getValue(), {
+				highlight: (code, lang) => {
+					//return test(code, lang);
+				}
+			});
+			const sanitized = DOMPurify.sanitize(html);
+			document.getElementById('preview').innerHTML = sanitized;
+			marked.getMarkdown = function (text) {
+				var turndownService = new TurndownService({
+					headingStyle: 'atx',
+					codeBlockStyle: 'fenced',
+				})
+				var markdown = turndownService.turndown(text)
+				return markdown;
+			}
+		});			
+		*/
+	</script>
+	<div id="test"></div>
+</body>
+
+</html>
