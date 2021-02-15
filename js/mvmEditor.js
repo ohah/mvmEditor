@@ -320,6 +320,12 @@ var mvmEditor = /** @class */ (function () {
         var blockquote = this.iconAppend('fas fa-quote-right');
         blockquote.dataset.tooptip = "주석";
         blockquote.addEventListener('click', function () { return _this.InsertTemplate(">", ""); });
+        var chart = this.iconAppend('fas fa-chart-bar');
+        chart.addEventListener('click', function () { return _this.CreateChartModal(); });
+        chart.dataset.tooptip = "차트";
+        var fullscreen = this.iconAppend('fas fa-expand');
+        fullscreen.addEventListener('click', function () { return _this.FullScreeen(); });
+        fullscreen.dataset.tooptip = "전체화면";
         var info = this.iconAppend('fas fa-question');
         info.addEventListener('click', function () { return _this.CreateInfo(); });
         info.dataset.tooptip = "에디터 정보";
@@ -336,7 +342,89 @@ var mvmEditor = /** @class */ (function () {
         this.menuArea.appendChild(table);
         this.menuArea.appendChild(code);
         this.menuArea.appendChild(blockquote);
+        this.menuArea.appendChild(chart);
+        this.menuArea.appendChild(fullscreen);
         this.menuArea.appendChild(info);
+    };
+    mvmEditor.prototype.CreateChartModal = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var self, Modal, codeMenu, confirm, chartWrapper, chartArea, preview, options;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        self = this;
+                        Modal = document.createElement('div');
+                        codeMenu = document.createElement('div');
+                        confirm = document.createElement('button');
+                        chartWrapper = document.createElement('div');
+                        chartWrapper.classList.add('mvm-chartWrapper');
+                        chartArea = document.createElement('div');
+                        chartArea.classList.add('mvm-chartArea');
+                        preview = document.createElement('div');
+                        preview.classList.add('mvm-chartPreview');
+                        chartArea.appendChild(this.codeArea);
+                        chartWrapper.appendChild(chartArea);
+                        chartWrapper.appendChild(preview);
+                        confirm.addEventListener('click', function () { return _this.InsertCode(); });
+                        confirm.classList.add('mvm-button');
+                        confirm.textContent = '확인';
+                        Modal.classList.add('mvm-modal');
+                        Modal.style.height = "90%";
+                        Modal.addEventListener('click', function (e) { return e.stopPropagation(); });
+                        Modal.appendChild(codeMenu);
+                        Modal.appendChild(chartWrapper);
+                        Modal.appendChild(confirm);
+                        this.codeArea.style.height = "300px";
+                        options = {
+                            chart: {
+                                type: 'line'
+                            },
+                            series: [{
+                                    name: 'sales',
+                                    data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
+                                }],
+                            xaxis: {
+                                categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999]
+                            }
+                        };
+                        this.modalWrapper.appendChild(Modal);
+                        document.body.appendChild(this.modalWrapper);
+                        monaco.editor.setModelLanguage(this.codeEditor.getModel(), 'json');
+                        return [4 /*yield*/, this.codeEditor.setValue(JSON.stringify(options))];
+                    case 1:
+                        _a.sent();
+                        // this.codeEditor.getAction('editor.action.formatDocument').run().then(() => console.log('finished'));
+                        setTimeout(function () {
+                            console.log('실행');
+                            _this.codeEditor.trigger('anyString', 'editor.action.formatDocument');
+                        }, 50);
+                        this.codeKeyup = this.codeEditor.onDidChangeModelContent(function (e) {
+                            try {
+                                var opt = JSON.parse(_this.codeEditor.getValue());
+                                var chart = new ApexCharts(preview, opt);
+                                preview.innerHTML = '';
+                                chart.render();
+                            }
+                            catch (error) {
+                                console.log('error');
+                            }
+                        });
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    mvmEditor.prototype.FullScreeen = function () {
+        var _a, _b, _c;
+        if ((_a = this.wrapper) === null || _a === void 0 ? void 0 : _a.classList.contains('mvm-fullscreen')) {
+            (_b = this.wrapper) === null || _b === void 0 ? void 0 : _b.classList.remove('mvm-fullscreen');
+            this.editarea.style.height = this.opt.height + "px";
+        }
+        else {
+            (_c = this.wrapper) === null || _c === void 0 ? void 0 : _c.classList.add('mvm-fullscreen');
+            this.editarea.style.height = (window.innerHeight - 51) + "px";
+        }
     };
     mvmEditor.prototype.getSelectionText = function () {
         return this.editor.getModel().getValueInRange(this.editor.getSelection());
@@ -379,6 +467,7 @@ var mvmEditor = /** @class */ (function () {
         confirm.addEventListener('click', function () { return _this.InsertCode(); });
         confirm.classList.add('mvm-button');
         confirm.textContent = '확인';
+        this.codeArea.style.height = (window.innerHeight - 200) + "px";
         selectLang.add(this.optionElement('javascript'));
         selectLang.add(this.optionElement('typescript'));
         selectLang.add(this.optionElement('html'));
@@ -413,6 +502,8 @@ var mvmEditor = /** @class */ (function () {
             if (this.modalWrapper.firstChild)
                 this.modalWrapper.removeChild(this.modalWrapper.firstChild);
         }
+        if (this.codeKeyup)
+            this.codeKeyup.dispose();
         this.modalWrapper.remove();
     };
     mvmEditor.prototype.InsertCode = function () {
@@ -469,3 +560,4 @@ var mvmEditorViewer = /** @class */ (function () {
     }
     return mvmEditorViewer;
 }());
+//현재 세부전달사항의 일부 기능, 그리고 마무리 작업등에 의해 수정되는 레이아웃들이 끝나야 진행 될 수 있는 반응형을 제외하면 업무 특성상 오프라인이나 온라인이나 작업 소통에는 크게 차이가 없습니다.

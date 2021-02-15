@@ -5,6 +5,7 @@
 declare var require: any;
 declare var TurndownService: any;
 declare var focuseditor: any;
+declare var ApexCharts: any;
 declare var Promise: any;
 declare var codeEditor: any;
 declare var hljs: any;
@@ -35,6 +36,7 @@ class mvmEditor {
   private codeArea:HTMLElement;
   private ImageInput:HTMLInputElement;
   private modalWrapper:HTMLElement;
+  private codeKeyup:any;
   private opt:editorOpt = {
     dom : "body",
     width : 100,
@@ -299,6 +301,12 @@ class mvmEditor {
     const blockquote = this.iconAppend('fas fa-quote-right');
     blockquote.dataset.tooptip = "주석";
     blockquote.addEventListener('click', ()=>this.InsertTemplate(">", ""))
+    const chart = this.iconAppend('fas fa-chart-bar');
+    chart.addEventListener('click', ()=>this.CreateChartModal())
+    chart.dataset.tooptip = "차트";
+    const fullscreen = this.iconAppend('fas fa-expand');
+    fullscreen.addEventListener('click', ()=>this.FullScreeen())
+    fullscreen.dataset.tooptip = "전체화면";
     const info = this.iconAppend('fas fa-question');
     info.addEventListener('click', ()=>this.CreateInfo())
     info.dataset.tooptip = "에디터 정보";
@@ -315,7 +323,76 @@ class mvmEditor {
     this.menuArea.appendChild(table)
     this.menuArea.appendChild(code)
     this.menuArea.appendChild(blockquote)
+    this.menuArea.appendChild(chart)
+    this.menuArea.appendChild(fullscreen)
     this.menuArea.appendChild(info)
+  }
+  async CreateChartModal() {
+    const self = this;
+    const Modal = document.createElement('div');
+    const codeMenu = document.createElement('div');
+    const confirm = document.createElement('button');
+    const chartWrapper = document.createElement('div');
+    chartWrapper.classList.add('mvm-chartWrapper')
+    const chartArea = document.createElement('div');
+    chartArea.classList.add('mvm-chartArea')
+    const preview = document.createElement('div');
+    preview.classList.add('mvm-chartPreview')
+    chartArea.appendChild(this.codeArea);
+    chartWrapper.appendChild(chartArea)
+    chartWrapper.appendChild(preview)
+
+    confirm.addEventListener('click', ()=>this.InsertCode());
+    confirm.classList.add('mvm-button');
+    confirm.textContent = '확인';
+    Modal.classList.add('mvm-modal');
+    Modal.style.height = "90%";
+    Modal.addEventListener('click', (e)=>e.stopPropagation());
+    Modal.appendChild(codeMenu);
+    Modal.appendChild(chartWrapper);
+    Modal.appendChild(confirm);
+    this.codeArea.style.height = "300px";
+    const options = {
+      chart: {
+        type: 'line'
+      },
+      series: [{
+        name: 'sales',
+        data: [30,40,35,50,49,60,70,91,125]
+      }],
+      xaxis: {
+        categories: [1991,1992,1993,1994,1995,1996,1997, 1998,1999]
+      }
+    }
+    this.modalWrapper.appendChild(Modal);
+    document.body.appendChild(this.modalWrapper);
+    monaco.editor.setModelLanguage(this.codeEditor.getModel(), 'json');
+    await this.codeEditor.setValue(JSON.stringify(options));
+    // this.codeEditor.getAction('editor.action.formatDocument').run().then(() => console.log('finished'));
+    setTimeout(() => {
+      console.log('실행')
+      this.codeEditor.trigger('anyString','editor.action.formatDocument');
+    }, 50);
+
+    this.codeKeyup = this.codeEditor.onDidChangeModelContent((e:any) => {
+      try {
+        const opt = JSON.parse(this.codeEditor.getValue());
+        const chart = new ApexCharts(preview, opt);
+        preview.innerHTML = '';        
+        chart.render();
+      } catch (error) {
+        console.log('error');
+      }
+    })
+  }
+  FullScreeen() {
+    if(this.wrapper?.classList.contains('mvm-fullscreen')) {
+      this.wrapper?.classList.remove('mvm-fullscreen')
+      this.editarea.style.height = `${this.opt.height}px`;
+    } else {
+      this.wrapper?.classList.add('mvm-fullscreen')
+      this.editarea.style.height = (window.innerHeight - 51) + "px";
+    }
   }
   getSelectionText(){
     return this.editor.getModel().getValueInRange(this.editor.getSelection())
@@ -357,6 +434,7 @@ class mvmEditor {
     confirm.addEventListener('click', ()=>this.InsertCode());
     confirm.classList.add('mvm-button');
     confirm.textContent = '확인';
+    this.codeArea.style.height = (window.innerHeight - 200) + "px";
     selectLang.add(this.optionElement('javascript'))
     selectLang.add(this.optionElement('typescript'))
     selectLang.add(this.optionElement('html'))
@@ -386,6 +464,7 @@ class mvmEditor {
     this.modalWrapper.appendChild(Modal);
     document.body.appendChild(this.modalWrapper);
     monaco.editor.setModelLanguage(this.codeEditor.getModel(), 'javascript');
+    
     this.codeEditor.setValue('');
   }
   RemoveModal() {
@@ -393,6 +472,7 @@ class mvmEditor {
       if(this.modalWrapper.firstChild)
         this.modalWrapper.removeChild(this.modalWrapper.firstChild);
     }
+    if(this.codeKeyup) this.codeKeyup.dispose();
     this.modalWrapper.remove();
   }
   InsertCode() {
@@ -440,3 +520,4 @@ class mvmEditorViewer {
     });
   }
 }
+//현재 세부전달사항의 일부 기능, 그리고 마무리 작업등에 의해 수정되는 레이아웃들이 끝나야 진행 될 수 있는 반응형을 제외하면 업무 특성상 오프라인이나 온라인이나 작업 소통에는 크게 차이가 없습니다.

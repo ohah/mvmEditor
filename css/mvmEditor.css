@@ -17,7 +17,7 @@
   overflow:hidden;
   border:1px solid #eee;
   box-sizing:border-box;
-  margin:10px 0;
+  margin:0 0;
 }
 .mvm-edit-wrapper{
   overflow:hidden;
@@ -46,7 +46,7 @@ button.active{
 .mvm-wrapper button.balloon{position: relative}
 .mvm-wrapper button.balloon:hover:after{
   display:block;
-  z-index:10000;
+  z-index:100;
 } 
 .mvm-wrapper button.balloon::after{
   display:none;
@@ -96,3 +96,7 @@ button.active{
 .mvm-image-upload{display:none;}
 .mvm-button::after{clear: both;content:'';display:table;}
 .mvm-button{margin:10px 0;float:right;cursor:pointer;padding:5px 10px; border:1px solid #dbdbdb;background: royalblue;color:white;border-radius: 5px;font-size:0.95rem}
+.mvm-fullscreen{position:fixed;top:0;left:0;height:100%;width:100%;z-index: 9999;background:#fff}
+.mvm-chartWrapper{height:300px;width:100%;} 
+.mvm-chartWrapper::after{clear: both;display:table;content: '';}
+.mvm-chartArea, .mvm-chartPreview{float:left;width:50%;position: relative;height:100%;}
