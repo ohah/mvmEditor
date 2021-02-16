@@ -5,7 +5,7 @@ monaco-editor, higlightjs, markedjs, purifyjs, turndownjs를 활용한 마크다
 현재 개발중인 에디터로 수정 재배포 불가 합니다.
 
 
-##사용법
+## 사용법
 
 ```typescript
 interface editorOpt {
