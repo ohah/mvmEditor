@@ -55,9 +55,12 @@ var mvmEditor = /** @class */ (function () {
             defaultValue: '',
             uploadurl: "",
             uploadname: "bf_file",
-            editorurl: location.origin
+            editorurl: location.origin,
+            theme: 'vs',
+            toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen']
         };
-        this.opt = __assign({ width: 100, height: 300, defaultValue: '' }, option);
+        this.opt = __assign({ width: 100, height: 300, defaultValue: '', theme: 'vs', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen'] }, option);
+        console.log(this.opt);
         var self = this;
         this.ImageInput = document.createElement('input');
         this.ImageInput.setAttribute('type', 'file');
@@ -125,8 +128,7 @@ var mvmEditor = /** @class */ (function () {
             var _this = this;
             var _a, _b, _c;
             self.codeEditor = monaco.editor.create(self.codeArea, {
-                //theme: 'vs-dark',
-                theme: "vs",
+                theme: self.opt.theme,
                 wordWrap: true,
                 fontFamily: 'Nanum Gothic Coding',
                 automaticLayout: true,
@@ -140,8 +142,7 @@ var mvmEditor = /** @class */ (function () {
                 scrollBeyondLastLine: false
             });
             self.editor = monaco.editor.create(self.editarea, {
-                //theme: 'vs-dark',
-                theme: "vs",
+                theme: self.opt.theme,
                 wordWrap: true,
                 fontFamily: 'Nanum Gothic Coding',
                 automaticLayout: true,
@@ -263,6 +264,7 @@ var mvmEditor = /** @class */ (function () {
     };
     mvmEditor.prototype.CreateMenu = function () {
         var _this = this;
+        var _a;
         var undo = this.iconAppend('fas fa-undo');
         undo.dataset.tooptip = "취소";
         undo.addEventListener('click', function () { return _this.editor.getModel().undo(); });
@@ -295,6 +297,9 @@ var mvmEditor = /** @class */ (function () {
         var bold = this.iconAppend('fas fa-bold');
         bold.dataset.tooptip = "굵게";
         bold.addEventListener('click', function () { return _this.InsertTemplate("**", "**"); });
+        var strikethrough = this.iconAppend('fas fa-strikethrough');
+        strikethrough.dataset.tooptip = "취소선";
+        strikethrough.addEventListener('click', function () { return _this.InsertTemplate("~~", "~~"); });
         var image = this.iconAppend('fas fa-image');
         image.addEventListener('click', function () { return _this.ImageInput.click(); });
         image.dataset.tooptip = "이미지 업로드";
@@ -331,12 +336,46 @@ var mvmEditor = /** @class */ (function () {
         info.dataset.tooptip = "에디터 정보";
         info.classList.add('balloon-right');
         info.style.float = "right";
+        (_a = this.opt.toolbar) === null || _a === void 0 ? void 0 : _a.forEach(function (name) {
+            if (name.toLowerCase() === "undo")
+                _this.menuArea.appendChild(undo);
+            if (name.toLowerCase() === "redo")
+                _this.menuArea.appendChild(redo);
+            if (name.toLowerCase() === "listul")
+                _this.menuArea.appendChild(listul);
+            if (name.toLowerCase() === "listol")
+                _this.menuArea.appendChild(listol);
+            if (name.toLowerCase() === "italic")
+                _this.menuArea.appendChild(italic);
+            if (name.toLowerCase() === "bold")
+                _this.menuArea.appendChild(bold);
+            if (name.toLowerCase() === "strikethrough")
+                _this.menuArea.appendChild(strikethrough);
+            if (name.toLowerCase() === "image")
+                _this.menuArea.appendChild(image);
+            if (name.toLowerCase() === "link")
+                _this.menuArea.appendChild(link);
+            if (name.toLowerCase() === "table")
+                _this.menuArea.appendChild(table);
+            if (name.toLowerCase() === "code")
+                _this.menuArea.appendChild(code);
+            if (name.toLowerCase() === "blockquote")
+                _this.menuArea.appendChild(blockquote);
+            if (name.toLowerCase() === "chart")
+                _this.menuArea.appendChild(chart);
+            if (name.toLowerCase() === "fullscreen")
+                _this.menuArea.appendChild(fullscreen);
+            if (name.toLowerCase() === "info")
+                _this.menuArea.appendChild(info);
+        });
+        /*
         this.menuArea.appendChild(undo);
         this.menuArea.appendChild(redo);
         this.menuArea.appendChild(listul);
         this.menuArea.appendChild(listol);
         this.menuArea.appendChild(italic);
         this.menuArea.appendChild(bold);
+        this.menuArea.appendChild(strikethrough);
         this.menuArea.appendChild(image);
         this.menuArea.appendChild(link);
         this.menuArea.appendChild(table);
@@ -345,74 +384,109 @@ var mvmEditor = /** @class */ (function () {
         this.menuArea.appendChild(chart);
         this.menuArea.appendChild(fullscreen);
         this.menuArea.appendChild(info);
+        */
     };
     mvmEditor.prototype.CreateChartModal = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var self, Modal, codeMenu, confirm, chartWrapper, chartArea, preview, options;
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        self = this;
-                        Modal = document.createElement('div');
-                        codeMenu = document.createElement('div');
-                        confirm = document.createElement('button');
-                        chartWrapper = document.createElement('div');
-                        chartWrapper.classList.add('mvm-chartWrapper');
-                        chartArea = document.createElement('div');
-                        chartArea.classList.add('mvm-chartArea');
-                        preview = document.createElement('div');
-                        preview.classList.add('mvm-chartPreview');
-                        chartArea.appendChild(this.codeArea);
-                        chartWrapper.appendChild(chartArea);
-                        chartWrapper.appendChild(preview);
-                        confirm.addEventListener('click', function () { return _this.InsertCode(); });
-                        confirm.classList.add('mvm-button');
-                        confirm.textContent = '확인';
-                        Modal.classList.add('mvm-modal');
-                        Modal.style.height = "90%";
-                        Modal.addEventListener('click', function (e) { return e.stopPropagation(); });
-                        Modal.appendChild(codeMenu);
-                        Modal.appendChild(chartWrapper);
-                        Modal.appendChild(confirm);
-                        this.codeArea.style.height = "300px";
-                        options = {
-                            chart: {
-                                type: 'line'
-                            },
-                            series: [{
-                                    name: 'sales',
-                                    data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
-                                }],
-                            xaxis: {
-                                categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999]
-                            }
-                        };
-                        this.modalWrapper.appendChild(Modal);
-                        document.body.appendChild(this.modalWrapper);
-                        monaco.editor.setModelLanguage(this.codeEditor.getModel(), 'json');
-                        return [4 /*yield*/, this.codeEditor.setValue(JSON.stringify(options))];
-                    case 1:
-                        _a.sent();
-                        // this.codeEditor.getAction('editor.action.formatDocument').run().then(() => console.log('finished'));
-                        setTimeout(function () {
-                            console.log('실행');
-                            _this.codeEditor.trigger('anyString', 'editor.action.formatDocument');
-                        }, 50);
-                        this.codeKeyup = this.codeEditor.onDidChangeModelContent(function (e) {
-                            try {
-                                var opt = JSON.parse(_this.codeEditor.getValue());
-                                var chart = new ApexCharts(preview, opt);
-                                preview.innerHTML = '';
-                                chart.render();
-                            }
-                            catch (error) {
-                                console.log('error');
-                            }
-                        });
-                        return [2 /*return*/];
-                }
-            });
+        var _this = this;
+        var self = this;
+        var Modal = document.createElement('div');
+        var chartMenu = document.createElement('div');
+        var formatDocument = document.createElement('button');
+        formatDocument.textContent = 'JSON 포맷 정렬';
+        formatDocument.setAttribute('type', 'button');
+        formatDocument.addEventListener('click', function () { return self.codeEditor.trigger('anyString', 'editor.action.formatDocument'); });
+        formatDocument.classList.add('mvm-popup-button');
+        chartMenu.appendChild(formatDocument);
+        var confirm = document.createElement('button');
+        var chartWrapper = document.createElement('div');
+        chartWrapper.classList.add('mvm-chartWrapper');
+        var chartArea = document.createElement('div');
+        chartArea.classList.add('mvm-chartArea');
+        var preview = document.createElement('div');
+        preview.classList.add('mvm-chartPreview');
+        chartArea.appendChild(this.codeArea);
+        chartWrapper.appendChild(chartArea);
+        chartWrapper.appendChild(preview);
+        var tableWrapper = document.createElement('div');
+        tableWrapper.classList.add('mvm-tableWrapper');
+        var selectType = document.createElement('select');
+        selectType.add(this.optionElement('line'));
+        selectType.add(this.optionElement('area'));
+        selectType.add(this.optionElement('bar'));
+        selectType.add(this.optionElement('rader'));
+        selectType.add(this.optionElement('histogram'));
+        selectType.add(this.optionElement('pie'));
+        selectType.add(this.optionElement('donut'));
+        selectType.add(this.optionElement('radialBar'));
+        selectType.add(this.optionElement('scatter'));
+        selectType.add(this.optionElement('bubble'));
+        selectType.add(this.optionElement('heatmap'));
+        selectType.add(this.optionElement('candelstick'));
+        tableWrapper.appendChild(selectType);
+        selectType.addEventListener('change', function (e) {
+            var value = e.target.value;
+            try {
+                var opt = JSON.parse(_this.codeEditor.getValue());
+                opt.chart.type = value;
+                _this.codeEditor.setValue(JSON.stringify(opt));
+                _this.codeEditor.trigger('anyString', 'editor.action.formatDocument');
+                var chart = new ApexCharts(preview, opt);
+                preview.innerHTML = '';
+                chart.render();
+            }
+            catch (error) {
+                console.log('error');
+                throw new Error("JSON 파일이 아닙니다.");
+            }
+        });
+        var table = document.createElement('table');
+        table.classList.add('mvm-chart-table');
+        var row = table.insertRow(table.rows.length); // 하단에 추가
+        row.insertCell(0);
+        row.insertCell(1);
+        tableWrapper.appendChild(table);
+        confirm.addEventListener('click', function () { return _this.InsertCode(); });
+        confirm.classList.add('mvm-button');
+        confirm.textContent = '확인';
+        Modal.classList.add('mvm-modal');
+        Modal.style.height = "90%";
+        Modal.addEventListener('click', function (e) { return e.stopPropagation(); });
+        Modal.appendChild(chartMenu);
+        Modal.appendChild(chartWrapper);
+        Modal.appendChild(tableWrapper);
+        Modal.appendChild(confirm);
+        this.codeArea.style.height = "300px";
+        var options = {
+            chart: {
+                type: 'line'
+            },
+            series: [{
+                    name: 'sales',
+                    data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
+                }],
+            xaxis: {
+                categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999]
+            }
+        };
+        this.modalWrapper.appendChild(Modal);
+        document.body.appendChild(this.modalWrapper);
+        monaco.editor.setModelLanguage(this.codeEditor.getModel(), 'json');
+        this.codeEditor.setValue(JSON.stringify(options));
+        // this.codeEditor.getAction('editor.action.formatDocument').run().then(() => console.log('finished'));
+        setTimeout(function () {
+            console.log('실행');
+            _this.codeEditor.trigger('anyString', 'editor.action.formatDocument');
+        }, 50);
+        this.codeKeyup = this.codeEditor.onDidChangeModelContent(function (e) {
+            try {
+                var opt = JSON.parse(_this.codeEditor.getValue());
+                var chart = new ApexCharts(preview, opt);
+                preview.innerHTML = '';
+                chart.render();
+            }
+            catch (error) {
+                throw new Error("JSON 파일이 아닙니다.");
+            }
         });
     };
     mvmEditor.prototype.FullScreeen = function () {

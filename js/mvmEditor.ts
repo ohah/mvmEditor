@@ -21,7 +21,8 @@ interface editorOpt {
   defaultValue?:string,
   uploadurl:string,
   uploadname:string,
-  editorurl:string
+  editorurl:string,
+  toolbar?:Array<string>
 }
 
 class mvmEditor {
@@ -45,12 +46,14 @@ class mvmEditor {
     uploadurl: "",
     uploadname:"bf_file",
     editorurl: location.origin,
+    toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen']
   };
   constructor (option:editorOpt) {
     this.opt = {
       width : 100,
       height: 300,
       defaultValue:'',
+      toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen'],
       ...option
     }
     const self = this;
@@ -115,7 +118,6 @@ class mvmEditor {
     });
     require(['vs/editor/editor.main'], function () {
       self.codeEditor = monaco.editor.create(self.codeArea, {
-        //theme: 'vs-dark',
         theme: "vs",
         wordWrap: true,
         fontFamily: 'Nanum Gothic Coding',
@@ -130,7 +132,7 @@ class mvmEditor {
         scrollBeyondLastLine: false
       });
       self.editor = monaco.editor.create(self.editarea, {
-        //theme: 'vs-dark',
+        
         theme: "vs",
         wordWrap: true,
         fontFamily: 'Nanum Gothic Coding',
@@ -276,6 +278,9 @@ class mvmEditor {
     const bold = this.iconAppend('fas fa-bold');
     bold.dataset.tooptip = "굵게";
     bold.addEventListener('click', ()=>this.InsertTemplate("**", "**"))
+    const strikethrough = this.iconAppend('fas fa-strikethrough');
+    strikethrough.dataset.tooptip = "취소선";
+    strikethrough.addEventListener('click', ()=>this.InsertTemplate("~~", "~~"))
     const image = this.iconAppend('fas fa-image');
     image.addEventListener('click', ()=>this.ImageInput.click())
     image.dataset.tooptip = "이미지 업로드";
@@ -312,35 +317,100 @@ class mvmEditor {
     info.dataset.tooptip = "에디터 정보";
     info.classList.add('balloon-right');
     info.style.float = "right";
-    this.menuArea.appendChild(undo)
-    this.menuArea.appendChild(redo)
-    this.menuArea.appendChild(listul)
-    this.menuArea.appendChild(listol)
-    this.menuArea.appendChild(italic)
-    this.menuArea.appendChild(bold)
-    this.menuArea.appendChild(image)
-    this.menuArea.appendChild(link)
-    this.menuArea.appendChild(table)
-    this.menuArea.appendChild(code)
-    this.menuArea.appendChild(blockquote)
-    this.menuArea.appendChild(chart)
-    this.menuArea.appendChild(fullscreen)
-    this.menuArea.appendChild(info)
+    this.opt.toolbar?.forEach(name => {
+      if(name.toLowerCase() === "undo") this.menuArea.appendChild(undo);
+      if(name.toLowerCase() === "redo") this.menuArea.appendChild(redo);
+      if(name.toLowerCase() === "listul") this.menuArea.appendChild(listul);
+      if(name.toLowerCase() === "listol") this.menuArea.appendChild(listol);
+      if(name.toLowerCase() === "italic") this.menuArea.appendChild(italic);
+      if(name.toLowerCase() === "bold") this.menuArea.appendChild(bold);
+      if(name.toLowerCase() === "strikethrough") this.menuArea.appendChild(strikethrough);
+      if(name.toLowerCase() === "image") this.menuArea.appendChild(image);
+      if(name.toLowerCase() === "link") this.menuArea.appendChild(link);
+      if(name.toLowerCase() === "table") this.menuArea.appendChild(table);
+      if(name.toLowerCase() === "code") this.menuArea.appendChild(code);
+      if(name.toLowerCase() === "blockquote") this.menuArea.appendChild(blockquote);
+      if(name.toLowerCase() === "chart") this.menuArea.appendChild(chart);
+      if(name.toLowerCase() === "fullscreen") this.menuArea.appendChild(fullscreen);
+      if(name.toLowerCase() === "info") this.menuArea.appendChild(info);
+    });
+    /*
+    this.menuArea.appendChild(undo);
+    this.menuArea.appendChild(redo);
+    this.menuArea.appendChild(listul);
+    this.menuArea.appendChild(listol);
+    this.menuArea.appendChild(italic);
+    this.menuArea.appendChild(bold);
+    this.menuArea.appendChild(strikethrough);
+    this.menuArea.appendChild(image);
+    this.menuArea.appendChild(link);
+    this.menuArea.appendChild(table);
+    this.menuArea.appendChild(code);
+    this.menuArea.appendChild(blockquote);
+    this.menuArea.appendChild(chart);
+    this.menuArea.appendChild(fullscreen);
+    this.menuArea.appendChild(info);
+    */
   }
-  async CreateChartModal() {
+  CreateChartModal() {
     const self = this;
     const Modal = document.createElement('div');
-    const codeMenu = document.createElement('div');
+    const chartMenu = document.createElement('div');
+    const formatDocument = document.createElement('button');
+    formatDocument.textContent = 'JSON 포맷 정렬';
+    formatDocument.setAttribute('type', 'button');
+    formatDocument.addEventListener('click', ()=>self.codeEditor.trigger('anyString','editor.action.formatDocument'));
+    formatDocument.classList.add('mvm-popup-button');
+    chartMenu.appendChild(formatDocument);
     const confirm = document.createElement('button');
     const chartWrapper = document.createElement('div');
-    chartWrapper.classList.add('mvm-chartWrapper')
+    chartWrapper.classList.add('mvm-chartWrapper');
     const chartArea = document.createElement('div');
-    chartArea.classList.add('mvm-chartArea')
+    chartArea.classList.add('mvm-chartArea');
     const preview = document.createElement('div');
-    preview.classList.add('mvm-chartPreview')
+    preview.classList.add('mvm-chartPreview');
     chartArea.appendChild(this.codeArea);
-    chartWrapper.appendChild(chartArea)
-    chartWrapper.appendChild(preview)
+    chartWrapper.appendChild(chartArea);
+    chartWrapper.appendChild(preview);
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.classList.add('mvm-tableWrapper');
+    const selectType = document.createElement('select');
+    selectType.add(this.optionElement('line'));
+    selectType.add(this.optionElement('area'));
+    selectType.add(this.optionElement('bar'));
+    selectType.add(this.optionElement('rader'));
+    selectType.add(this.optionElement('histogram'));
+    selectType.add(this.optionElement('pie'));
+    selectType.add(this.optionElement('donut'));
+    selectType.add(this.optionElement('radialBar'));
+    selectType.add(this.optionElement('scatter'));
+    selectType.add(this.optionElement('bubble'));
+    selectType.add(this.optionElement('heatmap'));
+    selectType.add(this.optionElement('candelstick'));
+    tableWrapper.appendChild(selectType);
+    selectType.addEventListener('change', (e:any)=>{
+      const value = e.target.value;
+      try {
+        const opt = JSON.parse(this.codeEditor.getValue());
+        opt.chart.type = value;
+        this.codeEditor.setValue(JSON.stringify(opt));
+        this.codeEditor.trigger('anyString','editor.action.formatDocument');
+        const chart = new ApexCharts(preview, opt);
+        preview.innerHTML = '';        
+        chart.render();
+      } catch (error) {
+        console.log('error');
+        throw new Error("JSON 파일이 아닙니다.");
+      }
+    });
+
+    const table = document.createElement('table');
+    table.classList.add('mvm-chart-table');
+    const row = table.insertRow( table.rows.length ); // 하단에 추가
+    row.insertCell(0);
+    row.insertCell(1);
+    tableWrapper.appendChild(table);
 
     confirm.addEventListener('click', ()=>this.InsertCode());
     confirm.classList.add('mvm-button');
@@ -348,8 +418,9 @@ class mvmEditor {
     Modal.classList.add('mvm-modal');
     Modal.style.height = "90%";
     Modal.addEventListener('click', (e)=>e.stopPropagation());
-    Modal.appendChild(codeMenu);
+    Modal.appendChild(chartMenu);
     Modal.appendChild(chartWrapper);
+    Modal.appendChild(tableWrapper);
     Modal.appendChild(confirm);
     this.codeArea.style.height = "300px";
     const options = {
@@ -367,7 +438,7 @@ class mvmEditor {
     this.modalWrapper.appendChild(Modal);
     document.body.appendChild(this.modalWrapper);
     monaco.editor.setModelLanguage(this.codeEditor.getModel(), 'json');
-    await this.codeEditor.setValue(JSON.stringify(options));
+    this.codeEditor.setValue(JSON.stringify(options));
     // this.codeEditor.getAction('editor.action.formatDocument').run().then(() => console.log('finished'));
     setTimeout(() => {
       console.log('실행')
@@ -381,7 +452,7 @@ class mvmEditor {
         preview.innerHTML = '';        
         chart.render();
       } catch (error) {
-        console.log('error');
+        throw new Error("JSON 파일이 아닙니다.");
       }
     })
   }
