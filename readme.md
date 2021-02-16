@@ -32,5 +32,5 @@ const ed = new mvmEditor({
 
 ### UPLOAD Return Value
 
-업로드 실패시 {status : '404', url : ''}
-업로드 성공시 {status : '200', url : 'imgurl'}
+업로드 실패시 {status : 404, url : ''}
+업로드 성공시 {status : 200, url : 'imgurl'}
