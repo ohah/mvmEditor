@@ -5,7 +5,7 @@ monaco-editor, higlightjs, markedjs, purifyjs, turndownjs를 활용한 마크다
 현재 개발중인 에디터로 수정 재배포 불가 합니다.
 
 
-##사용법
+## 사용법
 
 ```typescript
 interface editorOpt {
@@ -66,5 +66,5 @@ Upload: async function uploadImage(blob) {
 
 ### UPLOAD Return Value
 
-업로드 실패시 {status : '404', url : ''}
-업로드 성공시 {status : '200', url : 'imgurl'}
+업로드 실패시 {status : 404, url : ''}
+업로드 성공시 {status : 200, url : 'imgurl'}
