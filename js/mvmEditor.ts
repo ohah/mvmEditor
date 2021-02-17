@@ -22,7 +22,8 @@ interface editorOpt {
   uploadurl:string,
   uploadname:string,
   editorurl:string,
-  toolbar?:Array<string>
+  toolbar?:Array<string>,
+  Upload?:(File:File)=>Object
 }
 
 class mvmEditor {
@@ -59,13 +60,12 @@ class mvmEditor {
     const self = this;
     this.ImageInput = document.createElement('input');
     this.ImageInput.setAttribute('type', 'file');
+    this.ImageInput.setAttribute('accept', 'image/*');
     this.ImageInput.classList.add('mvm-image-upload');
     this.ImageInput.addEventListener('change', async (e:any) => {
       const files = e.target.files;
       const selection = this.editor.getSelection();
-      console.log(files);
       const res = await this.ImageUpload(files[0]);
-      console.log(res);
       if(res.status !== "404") {
         this.editor.executeEdits("", [
           {
@@ -76,6 +76,7 @@ class mvmEditor {
         const { endLineNumber, endColumn } = this.editor.getSelection()
         this.editor.setPosition({ lineNumber: endLineNumber, column: endColumn })
       }
+      console.log(e.target);
       e.target.value = "";
     })
     this.codeArea = document.createElement('div');
@@ -190,7 +191,17 @@ class mvmEditor {
       }); 
       marked.setOptions({
         highlight: (code:string, lang:string) => {
-          return hljs.highlightAuto(code).value;
+          if(lang === 'apexchart') {
+            setTimeout(() => {
+              code = JSON.parse(code);
+              const chart = new ApexCharts(document.getElementById('asdf'), code);
+              chart.render();  
+            }, 100);
+            return `<div id="asdf"></div>`;
+          }
+          else {
+            return hljs.highlightAuto(code).value;
+          }
         }
       })
       const html = marked(self.editor.getValue());
@@ -412,7 +423,7 @@ class mvmEditor {
     row.insertCell(1);
     tableWrapper.appendChild(table);
 
-    confirm.addEventListener('click', ()=>this.InsertCode());
+    confirm.addEventListener('click', ()=>this.InsertCode('apexchart'));
     confirm.classList.add('mvm-button');
     confirm.textContent = '확인';
     Modal.classList.add('mvm-modal');
@@ -460,9 +471,11 @@ class mvmEditor {
     if(this.wrapper?.classList.contains('mvm-fullscreen')) {
       this.wrapper?.classList.remove('mvm-fullscreen')
       this.editarea.style.height = `${this.opt.height}px`;
+      this.preview.style.height = `${this.opt.height}px`;
     } else {
       this.wrapper?.classList.add('mvm-fullscreen')
       this.editarea.style.height = (window.innerHeight - 51) + "px";
+      this.preview.style.height = (window.innerHeight - 51) + "px";
     }
   }
   getSelectionText(){
@@ -546,27 +559,33 @@ class mvmEditor {
     if(this.codeKeyup) this.codeKeyup.dispose();
     this.modalWrapper.remove();
   }
-  InsertCode() {
+  InsertCode(langTitle?:String) {
     const value = this.codeEditor.getValue();
     const selection = this.editor.getSelection();
     const lang:any = this.modalWrapper.querySelector('select');
     this.editor.executeEdits("", [{
       range: new monaco.Range(selection.startLineNumber, selection.startColumn, selection.startLineNumber, selection.startColumn),
-      text: "\r\n```"+lang.value+"\r\n"+value+"\r\n```\r\rn"
+      text: "\r\n```"+ (langTitle ? langTitle : lang.value) +"\r\n"+value+"\r\n```\r\n"
     }])
     this.RemoveModal();
   }
   async ImageUpload(File:File) {
-    const formData = new FormData();
-    formData.append(this.opt.uploadname, File);
-    try{
-      const res = await fetch(this.opt.uploadurl, {
-        method: 'POST',
-        body: formData
-      })
-      return res.json()
-    }catch(err){
-      return {success:false}
+    console.log(this.opt.Upload);
+    if(this.opt.Upload) {
+      console.log('실행');
+      return this.opt.Upload(File);
+    } else {
+      const formData = new FormData();
+      formData.append(this.opt.uploadname, File);
+      try{
+        const res = await fetch(this.opt.uploadurl, {
+          method: 'POST',
+          body: formData
+        })
+        return res.json()
+      }catch(err){
+        return {success:false}
+      }
     }
   }
 }

@@ -56,14 +56,13 @@ var mvmEditor = /** @class */ (function () {
             uploadurl: "",
             uploadname: "bf_file",
             editorurl: location.origin,
-            theme: 'vs',
             toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen']
         };
-        this.opt = __assign({ width: 100, height: 300, defaultValue: '', theme: 'vs', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen'] }, option);
-        console.log(this.opt);
+        this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen'] }, option);
         var self = this;
         this.ImageInput = document.createElement('input');
         this.ImageInput.setAttribute('type', 'file');
+        this.ImageInput.setAttribute('accept', 'image/*');
         this.ImageInput.classList.add('mvm-image-upload');
         this.ImageInput.addEventListener('change', function (e) { return __awaiter(_this, void 0, void 0, function () {
             var files, selection, res, _a, endLineNumber, endColumn;
@@ -72,11 +71,9 @@ var mvmEditor = /** @class */ (function () {
                     case 0:
                         files = e.target.files;
                         selection = this.editor.getSelection();
-                        console.log(files);
                         return [4 /*yield*/, this.ImageUpload(files[0])];
                     case 1:
                         res = _b.sent();
-                        console.log(res);
                         if (res.status !== "404") {
                             this.editor.executeEdits("", [
                                 {
@@ -87,6 +84,7 @@ var mvmEditor = /** @class */ (function () {
                             _a = this.editor.getSelection(), endLineNumber = _a.endLineNumber, endColumn = _a.endColumn;
                             this.editor.setPosition({ lineNumber: endLineNumber, column: endColumn });
                         }
+                        console.log(e.target);
                         e.target.value = "";
                         return [2 /*return*/];
                 }
@@ -128,7 +126,7 @@ var mvmEditor = /** @class */ (function () {
             var _this = this;
             var _a, _b, _c;
             self.codeEditor = monaco.editor.create(self.codeArea, {
-                theme: self.opt.theme,
+                theme: "vs",
                 wordWrap: true,
                 fontFamily: 'Nanum Gothic Coding',
                 automaticLayout: true,
@@ -142,7 +140,7 @@ var mvmEditor = /** @class */ (function () {
                 scrollBeyondLastLine: false
             });
             self.editor = monaco.editor.create(self.editarea, {
-                theme: self.opt.theme,
+                theme: "vs",
                 wordWrap: true,
                 fontFamily: 'Nanum Gothic Coding',
                 automaticLayout: true,
@@ -207,7 +205,17 @@ var mvmEditor = /** @class */ (function () {
             });
             marked.setOptions({
                 highlight: function (code, lang) {
-                    return hljs.highlightAuto(code).value;
+                    if (lang === 'apexchart') {
+                        setTimeout(function () {
+                            code = JSON.parse(code);
+                            var chart = new ApexCharts(document.getElementById('asdf'), code);
+                            chart.render();
+                        }, 100);
+                        return "<div id=\"asdf\"></div>";
+                    }
+                    else {
+                        return hljs.highlightAuto(code).value;
+                    }
                 }
             });
             var html = marked(self.editor.getValue());
@@ -445,7 +453,7 @@ var mvmEditor = /** @class */ (function () {
         row.insertCell(0);
         row.insertCell(1);
         tableWrapper.appendChild(table);
-        confirm.addEventListener('click', function () { return _this.InsertCode(); });
+        confirm.addEventListener('click', function () { return _this.InsertCode('apexchart'); });
         confirm.classList.add('mvm-button');
         confirm.textContent = '확인';
         Modal.classList.add('mvm-modal');
@@ -494,10 +502,12 @@ var mvmEditor = /** @class */ (function () {
         if ((_a = this.wrapper) === null || _a === void 0 ? void 0 : _a.classList.contains('mvm-fullscreen')) {
             (_b = this.wrapper) === null || _b === void 0 ? void 0 : _b.classList.remove('mvm-fullscreen');
             this.editarea.style.height = this.opt.height + "px";
+            this.preview.style.height = this.opt.height + "px";
         }
         else {
             (_c = this.wrapper) === null || _c === void 0 ? void 0 : _c.classList.add('mvm-fullscreen');
             this.editarea.style.height = (window.innerHeight - 51) + "px";
+            this.preview.style.height = (window.innerHeight - 51) + "px";
         }
     };
     mvmEditor.prototype.getSelectionText = function () {
@@ -580,13 +590,13 @@ var mvmEditor = /** @class */ (function () {
             this.codeKeyup.dispose();
         this.modalWrapper.remove();
     };
-    mvmEditor.prototype.InsertCode = function () {
+    mvmEditor.prototype.InsertCode = function (langTitle) {
         var value = this.codeEditor.getValue();
         var selection = this.editor.getSelection();
         var lang = this.modalWrapper.querySelector('select');
         this.editor.executeEdits("", [{
                 range: new monaco.Range(selection.startLineNumber, selection.startColumn, selection.startLineNumber, selection.startColumn),
-                text: "\r\n```" + lang.value + "\r\n" + value + "\r\n```\r\rn"
+                text: "\r\n```" + (langTitle ? langTitle : lang.value) + "\r\n" + value + "\r\n```\r\n"
             }]);
         this.RemoveModal();
     };
@@ -596,22 +606,27 @@ var mvmEditor = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        console.log(this.opt.Upload);
+                        if (!this.opt.Upload) return [3 /*break*/, 1];
+                        console.log('실행');
+                        return [2 /*return*/, this.opt.Upload(File)];
+                    case 1:
                         formData = new FormData();
                         formData.append(this.opt.uploadname, File);
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
                         return [4 /*yield*/, fetch(this.opt.uploadurl, {
                                 method: 'POST',
                                 body: formData
                             })];
-                    case 2:
+                    case 3:
                         res = _a.sent();
                         return [2 /*return*/, res.json()];
-                    case 3:
+                    case 4:
                         err_1 = _a.sent();
                         return [2 /*return*/, { success: false }];
-                    case 4: return [2 /*return*/];
+                    case 5: return [2 /*return*/];
                 }
             });
         });
