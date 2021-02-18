@@ -184,7 +184,16 @@ class mvmEditor {
         }
       });
       self.editor.onDidChangeModelContent((e:any) => {
-        const html = marked(self.editor.getValue());
+        const renderer = new marked.Renderer();
+        renderer.code2 = function(body:any, ordered:any, start:any) {
+          //console.log(body, ordered,start);
+          var temp = `<pre><code class="language-${ordered}">${body}</code></pre>`;
+          return temp;
+        }
+      
+        const html = marked(self.editor.getValue(), { 
+          renderer: renderer 
+        });
         const sanitized = DOMPurify.sanitize(html, '');
         while ( self.preview.hasChildNodes() ) {
           if(self.preview.firstChild)
@@ -192,21 +201,26 @@ class mvmEditor {
         }
         //self.preview.innerHTML = sanitized;
         console.log(nodifyString(sanitized, {array: false}));
-        nodifyString(sanitized, {array: false}).forEach((node: any) => {
+        nodifyString(sanitized, {array: false}).forEach((node: HTMLElement , i:Number) => {
           console.log(node.textContent)
+          node.dataset.mdLine = `${i}`;
           self.preview.appendChild(node)
-        })
+          const codeChart = node.querySelector('[data-chart]');
+          if(codeChart && codeChart.textContent) {
+            const chart = new ApexCharts(codeChart, JSON.parse(codeChart.textContent));
+            codeChart.textContent = "";
+            chart.render();
+          }
+        });
         //const tokens = marked.lexer(value);
         //const html = marked.parser(tokens);
       }); 
       marked.setOptions({
-        highlight: (code:string, lang:string, callback?:any) => {
+        highlight: (code:string, lang:string) => {
           if(lang === 'apexchart') {
-            const chartDiv = document.createElement('div');
-            const chart = new ApexCharts(chartDiv, JSON.parse(code));
-            chart.render();
-            console.log(callback);
-            callback(chartDiv);
+            //console.log('callback', callback);
+            //callback(chartDiv);
+            return `<div data-chart='apexchart'>${code}</div>`;
           }
           else {
             return hljs.highlightAuto(code).value;
