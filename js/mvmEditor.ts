@@ -9,6 +9,7 @@ declare var ApexCharts: any;
 declare var Promise: any;
 declare var codeEditor: any;
 declare var hljs: any;
+declare const nodifyString:any;
 //declare const window:any;
 declare const monaco:any;
 declare const DOMPurify:any;
@@ -185,19 +186,27 @@ class mvmEditor {
       self.editor.onDidChangeModelContent((e:any) => {
         const html = marked(self.editor.getValue());
         const sanitized = DOMPurify.sanitize(html, '');
-        self.preview.innerHTML = sanitized;
+        while ( self.preview.hasChildNodes() ) {
+          if(self.preview.firstChild)
+            self.preview.removeChild(self.preview.firstChild);
+        }
+        //self.preview.innerHTML = sanitized;
+        console.log(nodifyString(sanitized, {array: false}));
+        nodifyString(sanitized, {array: false}).forEach((node: any) => {
+          console.log(node.textContent)
+          self.preview.appendChild(node)
+        })
         //const tokens = marked.lexer(value);
         //const html = marked.parser(tokens);
       }); 
       marked.setOptions({
-        highlight: (code:string, lang:string) => {
+        highlight: (code:string, lang:string, callback?:any) => {
           if(lang === 'apexchart') {
-            setTimeout(() => {
-              code = JSON.parse(code);
-              const chart = new ApexCharts(document.getElementById('asdf'), code);
-              chart.render();  
-            }, 100);
-            return `<div id="asdf"></div>`;
+            const chartDiv = document.createElement('div');
+            const chart = new ApexCharts(chartDiv, JSON.parse(code));
+            chart.render();
+            console.log(callback);
+            callback(chartDiv);
           }
           else {
             return hljs.highlightAuto(code).value;

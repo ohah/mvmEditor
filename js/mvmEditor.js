@@ -199,19 +199,27 @@ var mvmEditor = /** @class */ (function () {
             self.editor.onDidChangeModelContent(function (e) {
                 var html = marked(self.editor.getValue());
                 var sanitized = DOMPurify.sanitize(html, '');
-                self.preview.innerHTML = sanitized;
+                while (self.preview.hasChildNodes()) {
+                    if (self.preview.firstChild)
+                        self.preview.removeChild(self.preview.firstChild);
+                }
+                //self.preview.innerHTML = sanitized;
+                console.log(nodifyString(sanitized, { array: false }));
+                nodifyString(sanitized, { array: false }).forEach(function (node) {
+                    console.log(node.textContent);
+                    self.preview.appendChild(node);
+                });
                 //const tokens = marked.lexer(value);
                 //const html = marked.parser(tokens);
             });
             marked.setOptions({
-                highlight: function (code, lang) {
+                highlight: function (code, lang, callback) {
                     if (lang === 'apexchart') {
-                        setTimeout(function () {
-                            code = JSON.parse(code);
-                            var chart = new ApexCharts(document.getElementById('asdf'), code);
-                            chart.render();
-                        }, 100);
-                        return "<div id=\"asdf\"></div>";
+                        //const chartDiv = document.createElement('div');
+                        //const chart = new ApexCharts(chartDiv, code);
+                        //chart.render();
+                        console.log(callback);
+                        //callback(chartDiv);
                     }
                     else {
                         return hljs.highlightAuto(code).value;
@@ -649,4 +657,3 @@ var mvmEditorViewer = /** @class */ (function () {
     }
     return mvmEditorViewer;
 }());
-//현재 세부전달사항의 일부 기능, 그리고 마무리 작업등에 의해 수정되는 레이아웃들이 끝나야 진행 될 수 있는 반응형을 제외하면 업무 특성상 오프라인이나 온라인이나 작업 소통에는 크게 차이가 없습니다.
