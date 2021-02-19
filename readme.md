@@ -68,3 +68,6 @@ Upload: async function uploadImage(blob) {
 
 업로드 실패시 {status : 404, url : ''}
 업로드 성공시 {status : 200, url : 'imgurl'}
+
+
+### 차트기능 추가 중.

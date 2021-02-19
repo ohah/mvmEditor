@@ -40,6 +40,7 @@ class mvmEditor {
   private ImageInput:HTMLInputElement;
   private modalWrapper:HTMLElement;
   private codeKeyup:any;
+  private ChartTempSave:HTMLElement;
   private opt:editorOpt = {
     dom : "body",
     width : 100,
@@ -59,6 +60,9 @@ class mvmEditor {
       ...option
     }
     const self = this;
+
+    this.ChartTempSave = document.createElement('div');
+
     this.ImageInput = document.createElement('input');
     this.ImageInput.setAttribute('type', 'file');
     this.ImageInput.setAttribute('accept', 'image/*');
@@ -194,33 +198,68 @@ class mvmEditor {
         const html = marked(self.editor.getValue(), { 
           renderer: renderer 
         });
-        const sanitized = DOMPurify.sanitize(html, '');
+        const sanitized = DOMPurify.sanitize(html, '');        
         while ( self.preview.hasChildNodes() ) {
-          if(self.preview.firstChild)
-            self.preview.removeChild(self.preview.firstChild);
+          if(self.preview.firstChild) {
+            if(((self.preview.firstChild as HTMLElement).querySelector('[data-chart]') as HTMLElement)) {
+              let append = false;
+              self.ChartTempSave.childNodes.forEach(element => {
+                if(element === self.preview.firstChild) {
+                  append = true;                  
+                }
+              });
+              if(append === false) self.ChartTempSave.appendChild(self.preview.firstChild);
+            }
+            else {
+              self.preview.removeChild(self.preview.firstChild);
+            }
+          }
         }
         //self.preview.innerHTML = sanitized;
-        console.log(nodifyString(sanitized, {array: false}));
-        nodifyString(sanitized, {array: false}).forEach((node: HTMLElement , i:Number) => {
-          console.log(node.textContent)
-          node.dataset.mdLine = `${i}`;
-          self.preview.appendChild(node)
-          const codeChart = node.querySelector('[data-chart]');
-          if(codeChart && codeChart.textContent) {
-            const chart = new ApexCharts(codeChart, JSON.parse(codeChart.textContent));
-            codeChart.textContent = "";
-            chart.render();
+        const nodeList = nodifyString(sanitized);
+        const H:Array<HTMLElement> = [];
+        nodeList.forEach((node: HTMLElement , i:Number) => {
+          if((/h[1-6]/i).test(node.nodeName)) {
+            H.push(node.cloneNode(true) as HTMLElement);
+          }
+          if(node.nodeName !== '#text') {
+            const codeChart = node.querySelector('[data-chart]');
+            if(codeChart) {
+              let data = (codeChart as HTMLElement).dataset.chartdata;
+              let append = false;
+              self.ChartTempSave.childNodes.forEach(ChartTemp => {
+                const temp = (ChartTemp as HTMLElement).querySelector('[data-chart]') as HTMLElement;                
+                try {
+                  if(temp.dataset.chartdata === data) {
+                    self.preview.appendChild(ChartTemp);
+                    append = true;
+                  }
+                }catch(e) {
+                  console.log(e);
+                }
+              });
+              if(append === false && data) {
+                self.preview.appendChild(node);
+                const chart = new ApexCharts(codeChart, JSON.parse(data));
+                codeChart.textContent = "";
+                chart.render();
+              }
+            }else{
+              self.preview.appendChild(node);
+            }
           }
         });
         //const tokens = marked.lexer(value);
         //const html = marked.parser(tokens);
-      }); 
+        self.Toc(H);
+        //console.log(H);
+      });
       marked.setOptions({
         highlight: (code:string, lang:string) => {
           if(lang === 'apexchart') {
             //console.log('callback', callback);
             //callback(chartDiv);
-            return `<div data-chart='apexchart'>${code}</div>`;
+            return `<div data-chart='apexchart' data-chartdata='${code}'></div>`;
           }
           else {
             return hljs.highlightAuto(code).value;
@@ -278,6 +317,28 @@ class mvmEditor {
       this.editarea.classList.add('editorarea2');
       this.previewBtn.classList.add('active');
     } 
+  }
+  Toc(H:Array<HTMLElement>) {
+    const TocWrapper = document.createElement('div');
+    let paddingH:number = -1;
+    let padding:number;
+    //console.log('H', H);
+    H.forEach(node => {
+      const Num = /h([1-6])/i.exec(node.nodeName);
+      const div = document.createElement('div');
+      console.log('Num', Num);
+      if(Num) {
+        if(paddingH < parseInt(Num[1]) - 1 || paddingH === -1) {
+          paddingH = parseInt(Num[1]) - 1;
+        }
+        padding = parseInt(Num[1]) - 1;
+        div.style.paddingLeft = `${padding * 15}px`;
+      }
+      div.textContent = node.textContent;
+      TocWrapper.appendChild(div);
+    });
+    //console.log(TocWrapper);
+    document.body.appendChild(TocWrapper);
   }
   CreateMenu() {
     const undo = this.iconAppend('fas fa-undo');
@@ -431,7 +492,7 @@ class mvmEditor {
         this.codeEditor.setValue(JSON.stringify(opt));
         this.codeEditor.trigger('anyString','editor.action.formatDocument');
         const chart = new ApexCharts(preview, opt);
-        preview.innerHTML = '';        
+        preview.innerHTML = '';
         chart.render();
       } catch (error) {
         console.log('error');
@@ -616,6 +677,7 @@ class mvmEditor {
 interface ViewerOpt{
   ele:string,
   cssClass:string,
+  content?:string,
 }
 class mvmEditorViewer {
   private opt:ViewerOpt = {
@@ -628,8 +690,24 @@ class mvmEditorViewer {
       ...option
     }
     document.addEventListener('DOMContentLoaded', (event) => {
+      if(this.opt.content) {
+        this.innerHTML(this.opt.content);
+      }
       document.querySelector(self.opt.ele)?.classList.add(self.opt.cssClass);
       hljs.initHighlightingOnLoad();
     });
+  }
+  innerHTML (Html:string) {
+    const viewer = document.querySelector(this.opt.ele);
+    if(viewer)
+      viewer.innerHTML = Html;
+  }
+  getMarkdown () {
+    const turndownService:any = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+    })
+    const markdown = turndownService.turndown(document.querySelector(this.opt.ele)?.innerHTML);
+    return markdown;
   }
 }

@@ -9,7 +9,6 @@
 
 <body>
 	<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
 	<link rel="stylesheet" href="./css/github-markdown.css" />
 	<link rel="stylesheet" href="./css/mvmEditor.css" />
 	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
@@ -29,13 +28,53 @@
 			editorurl:"http://127.0.0.1:5500",
 			toolbar : ['listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen']
 		});
+		setTimeout(() => {
+			ed.setMarkdown(document.getElementById('testCode').innerText);
+		}, 1000);
 		const tet = new mvmEditor({
 			dom: "#mvmEditor2",
 			uploadurl : "https://test",
 			editorurl:"http://127.0.0.1:5500"
 		});
+		/*
+		const viewer = new mvmEditorViewer({
+			ele: "#mvmViewer",
+			content : `<div id="bo_v_con"><pre><code class="language-typescript hljs"><span class="hljs-keyword"><span class="hljs-keyword">interface</span></span> ViewerOpt {<span class="hljs-attr"><span class="hljs-attr">ele</span></span>: <span class="hljs-built_in"><span class="hljs-built_in">string</span></span>,<span class="hljs-attr"><span class="hljs-attr">cssClass</span></span>: <span class="hljs-built_in"><span class="hljs-built_in">string</span></span>,}<span class="hljs-class"><span class="hljs-keyword"><span class="hljs-class"><span class="hljs-keyword">class</span></span></span><span class="hljs-class"> </span><span class="hljs-title"><span class="hljs-class"><span class="hljs-title">mvmEditorViewer</span></span></span><span class="hljs-class"> </span></span>{<span class="hljs-keyword"><span class="hljs-keyword">private</span></span> opt: ViewerOpt = {<span class="hljs-attr"><span class="hljs-attr">ele</span></span>: <span class="hljs-string"><span class="hljs-string">"body"</span></span>,<span class="hljs-attr"><span class="hljs-attr">cssClass</span></span>: <span class="hljs-string"><span class="hljs-string">'markdown-body'</span></span>,};<span class="hljs-function"><span class="hljs-title"><span class="hljs-function"><span class="hljs-title">constructor</span></span></span><span class="hljs-function">(</span><span class="hljs-params"><span class="hljs-function"><span class="hljs-params">option: ViewerOpt</span></span></span><span class="hljs-function">)</span></span> {<span class="hljs-keyword"><span class="hljs-keyword">const</span></span> self = <span class="hljs-built_in"><span class="hljs-built_in">this</span></span>;<span class="hljs-built_in"><span class="hljs-built_in">this</span></span>.opt = {...option}<span class="hljs-built_in"><span class="hljs-built_in">document</span></span>.addEventListener(<span class="hljs-string"><span class="hljs-string">'DOMContentLoaded'</span></span>, <span class="hljs-function"><span class="hljs-function">(</span><span class="hljs-params"><span class="hljs-function"><span class="hljs-params">event</span></span></span><span class="hljs-function">) =&gt;</span></span> {<span class="hljs-built_in"><span class="hljs-built_in">document</span></span>.querySelector(self.opt.ele)?.classList.add(self.opt.cssClass);hljs.initHighlightingOnLoad();});}</code></pre><p>n<img src="https://allthatnba.com/data/editor/2102/3667491413_1613044701.7533.gif" alt="image" width="640"></p><h1 id="asdf">asdf</h1><pre><code class="hljs">깃허브</code></pre><p>테스트다</p><blockquote><blockquote><blockquote><p>ㅁㄴㅇㄹ ㅁㄴㅇㄹ&gt;&gt;</p></blockquote></blockquote></blockquote></div>`,
+		});
+		*/
 	</script>
 	<div>
+<pre id="testCode" style="display:none;">
+### 목록 테스트다
+ㅁㄴㅇㄹ
+## 하위 목록 테스트
+```typescript
+interface ViewerOpt {
+	ele: string,
+	cssClass: string,
+}
+class mvmEditorViewer {
+	private opt: ViewerOpt = {
+		ele: "body",
+		cssClass: 'markdown-body',
+	};
+	constructor(option: ViewerOpt) {
+		const self = this;
+		this.opt = {
+			...option
+		}
+		document.addEventListener('DOMContentLoaded', (event) => {
+			document.querySelector(self.opt.ele)?.classList.add(self.opt.cssClass);
+			hljs.initHighlightingOnLoad();
+		});
+	}
+}
+```			
+# 목록 여러개
+
+## 목록
+</pre>
+		<div id="mvmViewer"></div>
 		<div id="mvmEditor"></div>
 		<div id="mvmEditor2"></div>		
 	</div>

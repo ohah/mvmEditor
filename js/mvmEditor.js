@@ -60,6 +60,7 @@ var mvmEditor = /** @class */ (function () {
         };
         this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen'] }, option);
         var self = this;
+        this.ChartTempSave = document.createElement('div');
         this.ImageInput = document.createElement('input');
         this.ImageInput.setAttribute('type', 'file');
         this.ImageInput.setAttribute('accept', 'image/*');
@@ -207,32 +208,73 @@ var mvmEditor = /** @class */ (function () {
                     renderer: renderer
                 });
                 var sanitized = DOMPurify.sanitize(html, '');
+                var _loop_1 = function () {
+                    if (self.preview.firstChild) {
+                        if (self.preview.firstChild.querySelector('[data-chart]')) {
+                            var append_1 = false;
+                            self.ChartTempSave.childNodes.forEach(function (element) {
+                                if (element === self.preview.firstChild) {
+                                    append_1 = true;
+                                }
+                            });
+                            if (append_1 === false)
+                                self.ChartTempSave.appendChild(self.preview.firstChild);
+                        }
+                        else {
+                            self.preview.removeChild(self.preview.firstChild);
+                        }
+                    }
+                };
                 while (self.preview.hasChildNodes()) {
-                    if (self.preview.firstChild)
-                        self.preview.removeChild(self.preview.firstChild);
+                    _loop_1();
                 }
                 //self.preview.innerHTML = sanitized;
-                console.log(nodifyString(sanitized, { array: false }));
-                nodifyString(sanitized, { array: false }).forEach(function (node, i) {
-                    console.log(node.textContent);
-                    node.dataset.mdLine = "" + i;
-                    self.preview.appendChild(node);
-                    var codeChart = node.querySelector('[data-chart]');
-                    if (codeChart && codeChart.textContent) {
-                        var chart = new ApexCharts(codeChart, JSON.parse(codeChart.textContent));
-                        codeChart.textContent = "";
-                        chart.render();
+                var nodeList = nodifyString(sanitized);
+                var H = [];
+                nodeList.forEach(function (node, i) {
+                    if ((/h[1-6]/i).test(node.nodeName)) {
+                        H.push(node.cloneNode(true));
+                    }
+                    if (node.nodeName !== '#text') {
+                        var codeChart = node.querySelector('[data-chart]');
+                        if (codeChart) {
+                            var data_1 = codeChart.dataset.chartdata;
+                            var append_2 = false;
+                            self.ChartTempSave.childNodes.forEach(function (ChartTemp) {
+                                var temp = ChartTemp.querySelector('[data-chart]');
+                                try {
+                                    if (temp.dataset.chartdata === data_1) {
+                                        self.preview.appendChild(ChartTemp);
+                                        append_2 = true;
+                                    }
+                                }
+                                catch (e) {
+                                    console.log(e);
+                                }
+                            });
+                            if (append_2 === false && data_1) {
+                                self.preview.appendChild(node);
+                                var chart = new ApexCharts(codeChart, JSON.parse(data_1));
+                                codeChart.textContent = "";
+                                chart.render();
+                            }
+                        }
+                        else {
+                            self.preview.appendChild(node);
+                        }
                     }
                 });
                 //const tokens = marked.lexer(value);
                 //const html = marked.parser(tokens);
+                self.Toc(H);
+                //console.log(H);
             });
             marked.setOptions({
                 highlight: function (code, lang) {
                     if (lang === 'apexchart') {
                         //console.log('callback', callback);
                         //callback(chartDiv);
-                        return "<div data-chart='apexchart'>" + code + "</div>";
+                        return "<div data-chart='apexchart' data-chartdata='" + code + "'></div>";
                     }
                     else {
                         return hljs.highlightAuto(code).value;
@@ -290,6 +332,28 @@ var mvmEditor = /** @class */ (function () {
             this.editarea.classList.add('editorarea2');
             this.previewBtn.classList.add('active');
         }
+    };
+    mvmEditor.prototype.Toc = function (H) {
+        var TocWrapper = document.createElement('div');
+        var paddingH = -1;
+        var padding;
+        //console.log('H', H);
+        H.forEach(function (node) {
+            var Num = /h([1-6])/i.exec(node.nodeName);
+            var div = document.createElement('div');
+            console.log('Num', Num);
+            if (Num) {
+                if (paddingH < parseInt(Num[1]) - 1 || paddingH === -1) {
+                    paddingH = parseInt(Num[1]) - 1;
+                }
+                padding = parseInt(Num[1]) - 1;
+                div.style.paddingLeft = padding * 15 + "px";
+            }
+            div.textContent = node.textContent;
+            TocWrapper.appendChild(div);
+        });
+        //console.log(TocWrapper);
+        document.body.appendChild(TocWrapper);
     };
     mvmEditor.prototype.CreateMenu = function () {
         var _this = this;
@@ -656,6 +720,7 @@ var mvmEditor = /** @class */ (function () {
 }());
 var mvmEditorViewer = /** @class */ (function () {
     function mvmEditorViewer(option) {
+        var _this = this;
         this.opt = {
             ele: "body",
             cssClass: 'markdown-body'
@@ -664,9 +729,26 @@ var mvmEditorViewer = /** @class */ (function () {
         this.opt = __assign({}, option);
         document.addEventListener('DOMContentLoaded', function (event) {
             var _a;
+            if (_this.opt.content) {
+                _this.innerHTML(_this.opt.content);
+            }
             (_a = document.querySelector(self.opt.ele)) === null || _a === void 0 ? void 0 : _a.classList.add(self.opt.cssClass);
             hljs.initHighlightingOnLoad();
         });
     }
+    mvmEditorViewer.prototype.innerHTML = function (Html) {
+        var viewer = document.querySelector(this.opt.ele);
+        if (viewer)
+            viewer.innerHTML = Html;
+    };
+    mvmEditorViewer.prototype.getMarkdown = function () {
+        var _a;
+        var turndownService = new TurndownService({
+            headingStyle: 'atx',
+            codeBlockStyle: 'fenced'
+        });
+        var markdown = turndownService.turndown((_a = document.querySelector(this.opt.ele)) === null || _a === void 0 ? void 0 : _a.innerHTML);
+        return markdown;
+    };
     return mvmEditorViewer;
 }());
