@@ -228,6 +228,7 @@ var mvmEditor = /** @class */ (function () {
                 while (self.preview.hasChildNodes()) {
                     _loop_1();
                 }
+                console.log(self.ChartTempSave);
                 //self.preview.innerHTML = sanitized;
                 var nodeList = nodifyString(sanitized);
                 var H = [];
