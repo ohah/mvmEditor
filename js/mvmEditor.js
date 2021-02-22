@@ -60,6 +60,7 @@ var mvmEditor = /** @class */ (function () {
         };
         this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen'] }, option);
         var self = this;
+        this.TocWrapper = document.createElement('div');
         this.ChartTempSave = document.createElement('div');
         this.ImageInput = document.createElement('input');
         this.ImageInput.setAttribute('type', 'file');
@@ -228,7 +229,6 @@ var mvmEditor = /** @class */ (function () {
                 while (self.preview.hasChildNodes()) {
                     _loop_1();
                 }
-                console.log(self.ChartTempSave);
                 //self.preview.innerHTML = sanitized;
                 var nodeList = nodifyString(sanitized);
                 var H = [];
@@ -335,26 +335,32 @@ var mvmEditor = /** @class */ (function () {
         }
     };
     mvmEditor.prototype.Toc = function (H) {
-        var TocWrapper = document.createElement('div');
+        var _this = this;
         var paddingH = -1;
         var padding;
         //console.log('H', H);
-        H.forEach(function (node) {
+        this.TocWrapper.innerHTML = '';
+        H.forEach(function (node, i) {
             var Num = /h([1-6])/i.exec(node.nodeName);
             var div = document.createElement('div');
             console.log('Num', Num);
             if (Num) {
-                if (paddingH < parseInt(Num[1]) - 1 || paddingH === -1) {
-                    paddingH = parseInt(Num[1]) - 1;
+                if (i === 0) {
+                    paddingH = parseInt(Num[1]);
                 }
-                padding = parseInt(Num[1]) - 1;
+                if (paddingH > parseInt(Num[1])) {
+                    paddingH = parseInt(Num[1]);
+                }
+                padding = (parseInt(Num[1]) - 1) - (paddingH - 1);
+                console.log('paddingH', paddingH);
+                console.log('padding', padding);
                 div.style.paddingLeft = padding * 15 + "px";
             }
             div.textContent = node.textContent;
-            TocWrapper.appendChild(div);
+            _this.TocWrapper.appendChild(div);
         });
         //console.log(TocWrapper);
-        document.body.appendChild(TocWrapper);
+        document.body.appendChild(this.TocWrapper);
     };
     mvmEditor.prototype.CreateMenu = function () {
         var _this = this;

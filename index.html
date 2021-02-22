@@ -45,34 +45,12 @@
 	</script>
 	<div>
 <pre id="testCode" style="display:none;">
-### 목록 테스트다
-ㅁㄴㅇㄹ
-## 하위 목록 테스트
-```typescript
-interface ViewerOpt {
-	ele: string,
-	cssClass: string,
-}
-class mvmEditorViewer {
-	private opt: ViewerOpt = {
-		ele: "body",
-		cssClass: 'markdown-body',
-	};
-	constructor(option: ViewerOpt) {
-		const self = this;
-		this.opt = {
-			...option
-		}
-		document.addEventListener('DOMContentLoaded', (event) => {
-			document.querySelector(self.opt.ele)?.classList.add(self.opt.cssClass);
-			hljs.initHighlightingOnLoad();
-		});
-	}
-}
-```			
-# 목록 여러개
+### ㅁㄴㅇㄹ
+#### ㅁㄴㅇㄹ
 
-## 목록
+
+## ㅁㄴㅇㄹ
+### ㅁㄴㅇㄹ
 </pre>
 		<div id="mvmViewer"></div>
 		<div id="mvmEditor"></div>

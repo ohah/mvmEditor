@@ -41,6 +41,7 @@ class mvmEditor {
   private modalWrapper:HTMLElement;
   private codeKeyup:any;
   private ChartTempSave:HTMLElement;
+  private TocWrapper:HTMLElement;
   private opt:editorOpt = {
     dom : "body",
     width : 100,
@@ -60,7 +61,7 @@ class mvmEditor {
       ...option
     }
     const self = this;
-
+    this.TocWrapper = document.createElement('div');
     this.ChartTempSave = document.createElement('div');
 
     this.ImageInput = document.createElement('input');
@@ -319,26 +320,31 @@ class mvmEditor {
     } 
   }
   Toc(H:Array<HTMLElement>) {
-    const TocWrapper = document.createElement('div');
     let paddingH:number = -1;
     let padding:number;
     //console.log('H', H);
-    H.forEach(node => {
+    this.TocWrapper.innerHTML = '';
+    H.forEach((node, i) => {
       const Num = /h([1-6])/i.exec(node.nodeName);
       const div = document.createElement('div');
       console.log('Num', Num);
       if(Num) {
-        if(paddingH < parseInt(Num[1]) - 1 || paddingH === -1) {
-          paddingH = parseInt(Num[1]) - 1;
+        if(i === 0) {
+          paddingH = parseInt(Num[1]);
         }
-        padding = parseInt(Num[1]) - 1;
+        if(paddingH > parseInt(Num[1])) {
+          paddingH = parseInt(Num[1]);
+        }
+        padding = (parseInt(Num[1]) - 1) - (paddingH - 1);
+        console.log('paddingH', paddingH);
+        console.log('padding', padding);
         div.style.paddingLeft = `${padding * 15}px`;
       }
       div.textContent = node.textContent;
-      TocWrapper.appendChild(div);
+      this.TocWrapper.appendChild(div);
     });
     //console.log(TocWrapper);
-    document.body.appendChild(TocWrapper);
+    document.body.appendChild(this.TocWrapper);
   }
   CreateMenu() {
     const undo = this.iconAppend('fas fa-undo');
