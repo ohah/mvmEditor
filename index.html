@@ -20,13 +20,13 @@
 	<script type="text/javascript" src="./js/monaco-editor/min/vs/loader.js"></script>
 	<script src="./js/turndown.js"></script>
 	<script src="./js/mvmEditor.js"></script>
-	<script src="https://unpkg.com/nodify-string"></script>
+	<script src="./js/nodify-string.min.js"></script>
 	<script>
 		const ed = new mvmEditor({
 			dom: "#mvmEditor",
 			uploadurl : "https://test",
 			editorurl:"http://127.0.0.1:5500",
-			toolbar : ['listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen']
+			toolbar : ['listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'toc']
 		});
 		setTimeout(() => {
 			ed.setMarkdown(document.getElementById('testCode').innerText);
@@ -36,15 +36,13 @@
 			uploadurl : "https://test",
 			editorurl:"http://127.0.0.1:5500"
 		});
-		/*
 		const viewer = new mvmEditorViewer({
 			ele: "#mvmViewer",
-			content : `<div id="bo_v_con"><pre><code class="language-typescript hljs"><span class="hljs-keyword"><span class="hljs-keyword">interface</span></span> ViewerOpt {<span class="hljs-attr"><span class="hljs-attr">ele</span></span>: <span class="hljs-built_in"><span class="hljs-built_in">string</span></span>,<span class="hljs-attr"><span class="hljs-attr">cssClass</span></span>: <span class="hljs-built_in"><span class="hljs-built_in">string</span></span>,}<span class="hljs-class"><span class="hljs-keyword"><span class="hljs-class"><span class="hljs-keyword">class</span></span></span><span class="hljs-class"> </span><span class="hljs-title"><span class="hljs-class"><span class="hljs-title">mvmEditorViewer</span></span></span><span class="hljs-class"> </span></span>{<span class="hljs-keyword"><span class="hljs-keyword">private</span></span> opt: ViewerOpt = {<span class="hljs-attr"><span class="hljs-attr">ele</span></span>: <span class="hljs-string"><span class="hljs-string">"body"</span></span>,<span class="hljs-attr"><span class="hljs-attr">cssClass</span></span>: <span class="hljs-string"><span class="hljs-string">'markdown-body'</span></span>,};<span class="hljs-function"><span class="hljs-title"><span class="hljs-function"><span class="hljs-title">constructor</span></span></span><span class="hljs-function">(</span><span class="hljs-params"><span class="hljs-function"><span class="hljs-params">option: ViewerOpt</span></span></span><span class="hljs-function">)</span></span> {<span class="hljs-keyword"><span class="hljs-keyword">const</span></span> self = <span class="hljs-built_in"><span class="hljs-built_in">this</span></span>;<span class="hljs-built_in"><span class="hljs-built_in">this</span></span>.opt = {...option}<span class="hljs-built_in"><span class="hljs-built_in">document</span></span>.addEventListener(<span class="hljs-string"><span class="hljs-string">'DOMContentLoaded'</span></span>, <span class="hljs-function"><span class="hljs-function">(</span><span class="hljs-params"><span class="hljs-function"><span class="hljs-params">event</span></span></span><span class="hljs-function">) =&gt;</span></span> {<span class="hljs-built_in"><span class="hljs-built_in">document</span></span>.querySelector(self.opt.ele)?.classList.add(self.opt.cssClass);hljs.initHighlightingOnLoad();});}</code></pre><p>n<img src="https://allthatnba.com/data/editor/2102/3667491413_1613044701.7533.gif" alt="image" width="640"></p><h1 id="asdf">asdf</h1><pre><code class="hljs">깃허브</code></pre><p>테스트다</p><blockquote><blockquote><blockquote><p>ㅁㄴㅇㄹ ㅁㄴㅇㄹ&gt;&gt;</p></blockquote></blockquote></blockquote></div>`,
+			content : `<h2> 무야호 </h2>`,
 		});
-		*/
 	</script>
 	<div>
-<pre id="testCode" style="display:none;">
+<pre id="testCode" style="">
 ### ㅁㄴㅇㄹ
 #### ㅁㄴㅇㄹ
 

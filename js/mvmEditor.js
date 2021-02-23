@@ -56,11 +56,13 @@ var mvmEditor = /** @class */ (function () {
             uploadurl: "",
             uploadname: "bf_file",
             editorurl: location.origin,
-            toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen']
+            toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc']
         };
-        this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen'] }, option);
+        this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc'] }, option);
         var self = this;
         this.TocWrapper = document.createElement('div');
+        this.TocWrapper.classList.add('tocarea');
+        this.TocWrapper.classList.add('hide');
         this.ChartTempSave = document.createElement('div');
         this.ImageInput = document.createElement('input');
         this.ImageInput.setAttribute('type', 'file');
@@ -86,7 +88,6 @@ var mvmEditor = /** @class */ (function () {
                             _a = this.editor.getSelection(), endLineNumber = _a.endLineNumber, endColumn = _a.endColumn;
                             this.editor.setPosition({ lineNumber: endLineNumber, column: endColumn });
                         }
-                        console.log(e.target);
                         e.target.value = "";
                         return [2 /*return*/];
                 }
@@ -120,7 +121,6 @@ var mvmEditor = /** @class */ (function () {
         this.preview.style.height = this.opt.height + "px";
         this.preview.style.overflow = "auto";
         var defaultValue = this.opt.defaultValue ? this.opt.defaultValue : '';
-        console.log(this.opt.editorurl);
         require.config({
             paths: { vs: this.opt.editorurl + "/js/monaco-editor/min/vs" }
         });
@@ -199,15 +199,7 @@ var mvmEditor = /** @class */ (function () {
                 });
             }); });
             self.editor.onDidChangeModelContent(function (e) {
-                var renderer = new marked.Renderer();
-                renderer.code2 = function (body, ordered, start) {
-                    //console.log(body, ordered,start);
-                    var temp = "<pre><code class=\"language-" + ordered + "\">" + body + "</code></pre>";
-                    return temp;
-                };
-                var html = marked(self.editor.getValue(), {
-                    renderer: renderer
-                });
+                var html = marked(self.editor.getValue());
                 var sanitized = DOMPurify.sanitize(html, '');
                 var _loop_1 = function () {
                     if (self.preview.firstChild) {
@@ -334,16 +326,25 @@ var mvmEditor = /** @class */ (function () {
             this.previewBtn.classList.add('active');
         }
     };
+    mvmEditor.prototype.TocToggle = function () {
+        if (this.TocWrapper.classList.contains('hide')) {
+            this.TocWrapper.classList.remove('hide');
+        }
+        else {
+            this.TocWrapper.classList.add('hide');
+        }
+    };
     mvmEditor.prototype.Toc = function (H) {
-        var _this = this;
         var paddingH = -1;
         var padding;
         //console.log('H', H);
         this.TocWrapper.innerHTML = '';
+        var Wrapper = document.createElement('div');
+        Wrapper.classList.add('mvm-Toc');
         H.forEach(function (node, i) {
             var Num = /h([1-6])/i.exec(node.nodeName);
             var div = document.createElement('div');
-            console.log('Num', Num);
+            div.classList.add('mvm-Toc-List');
             if (Num) {
                 if (i === 0) {
                     paddingH = parseInt(Num[1]);
@@ -352,15 +353,14 @@ var mvmEditor = /** @class */ (function () {
                     paddingH = parseInt(Num[1]);
                 }
                 padding = (parseInt(Num[1]) - 1) - (paddingH - 1);
-                console.log('paddingH', paddingH);
-                console.log('padding', padding);
-                div.style.paddingLeft = padding * 15 + "px";
+                div.style.paddingLeft = padding * 11 + "px";
             }
             div.textContent = node.textContent;
-            _this.TocWrapper.appendChild(div);
+            Wrapper.appendChild(div);
         });
+        this.TocWrapper.appendChild(Wrapper);
         //console.log(TocWrapper);
-        document.body.appendChild(this.TocWrapper);
+        this.editorWrapper.insertBefore(this.TocWrapper, this.editarea);
     };
     mvmEditor.prototype.CreateMenu = function () {
         var _this = this;
@@ -431,11 +431,23 @@ var mvmEditor = /** @class */ (function () {
         var fullscreen = this.iconAppend('fas fa-expand');
         fullscreen.addEventListener('click', function () { return _this.FullScreeen(); });
         fullscreen.dataset.tooptip = "전체화면";
+        var Toc = this.iconAppend('far fa-address-book');
+        Toc.addEventListener('click', function () { return _this.TocToggle(); });
+        Toc.dataset.tooptip = "Toc(Table of Contents)";
+        Toc.classList.add('balloon-right');
+        Toc.style.float = "right";
         var info = this.iconAppend('fas fa-question');
         info.addEventListener('click', function () { return _this.CreateInfo(); });
         info.dataset.tooptip = "에디터 정보";
         info.classList.add('balloon-right');
         info.style.float = "right";
+        var preveiw = this.iconAppend('far fa-eye');
+        preveiw.addEventListener('click', function () { return _this.previewToggle(); });
+        preveiw.dataset.tooptip = "미리보기";
+        preveiw.classList.add('balloon-right');
+        preveiw.style.float = "right";
+        this.menuArea.appendChild(info);
+        this.menuArea.appendChild(preveiw);
         (_a = this.opt.toolbar) === null || _a === void 0 ? void 0 : _a.forEach(function (name) {
             if (name.toLowerCase() === "undo")
                 _this.menuArea.appendChild(undo);
@@ -465,9 +477,10 @@ var mvmEditor = /** @class */ (function () {
                 _this.menuArea.appendChild(chart);
             if (name.toLowerCase() === "fullscreen")
                 _this.menuArea.appendChild(fullscreen);
-            if (name.toLowerCase() === "info")
-                _this.menuArea.appendChild(info);
+            if (name.toLowerCase() === "toc")
+                _this.menuArea.appendChild(Toc);
         });
+        //this.menuArea.appendChild(Toc)
         /*
         this.menuArea.appendChild(undo);
         this.menuArea.appendChild(redo);
@@ -698,9 +711,7 @@ var mvmEditor = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        console.log(this.opt.Upload);
                         if (!this.opt.Upload) return [3 /*break*/, 1];
-                        console.log('실행');
                         return [2 /*return*/, this.opt.Upload(File)];
                     case 1:
                         formData = new FormData();
@@ -730,8 +741,10 @@ var mvmEditorViewer = /** @class */ (function () {
         var _this = this;
         this.opt = {
             ele: "body",
-            cssClass: 'markdown-body'
+            cssClass: 'markdown-body',
+            tocPos: "right"
         };
+        this.TocWrapper = document.createElement('div');
         var self = this;
         this.opt = __assign({}, option);
         document.addEventListener('DOMContentLoaded', function (event) {
@@ -744,9 +757,17 @@ var mvmEditorViewer = /** @class */ (function () {
         });
     }
     mvmEditorViewer.prototype.innerHTML = function (Html) {
-        var viewer = document.querySelector(this.opt.ele);
-        if (viewer)
-            viewer.innerHTML = Html;
+        return __awaiter(this, void 0, void 0, function () {
+            var viewer;
+            return __generator(this, function (_a) {
+                viewer = document.querySelector(this.opt.ele);
+                if (viewer) {
+                    viewer.innerHTML = Html;
+                    this.Toc();
+                }
+                return [2 /*return*/];
+            });
+        });
     };
     mvmEditorViewer.prototype.getMarkdown = function () {
         var _a;
@@ -756,6 +777,46 @@ var mvmEditorViewer = /** @class */ (function () {
         });
         var markdown = turndownService.turndown((_a = document.querySelector(this.opt.ele)) === null || _a === void 0 ? void 0 : _a.innerHTML);
         return markdown;
+    };
+    mvmEditorViewer.prototype.Toc = function () {
+        var _a, _b;
+        var H = [];
+        var pos = (_a = document.querySelector(this.opt.ele)) === null || _a === void 0 ? void 0 : _a.getBoundingClientRect();
+        var nodeList = (_b = document.querySelector(this.opt.ele)) === null || _b === void 0 ? void 0 : _b.children;
+        this.TocWrapper.style.position = "fixed";
+        this.TocWrapper.style.zIndex = '1000';
+        this.TocWrapper.style.left = (pos === null || pos === void 0 ? void 0 : pos.right) - this.TocWrapper.clientWidth + "px";
+        this.TocWrapper.style.top = (pos === null || pos === void 0 ? void 0 : pos.y) + "px";
+        console.log('nodeList', nodeList);
+        Array.prototype.forEach.call(nodeList, function (node) {
+            if ((/h[1-6]/i).test(node.nodeName)) {
+                H.push(node.cloneNode(true));
+            }
+        });
+        var paddingH = -1;
+        var padding;
+        var Wrapper = document.createElement('div');
+        Wrapper.classList.add('mvm-Toc');
+        H.forEach(function (node, i) {
+            var Num = /h([1-6])/i.exec(node.nodeName);
+            var div = document.createElement('div');
+            div.classList.add('mvm-Toc-List');
+            if (Num) {
+                if (i === 0) {
+                    paddingH = parseInt(Num[1]);
+                }
+                if (paddingH > parseInt(Num[1])) {
+                    paddingH = parseInt(Num[1]);
+                }
+                padding = (parseInt(Num[1]) - 1) - (paddingH - 1);
+                div.style.paddingLeft = padding * 11 + "px";
+            }
+            div.textContent = node.textContent;
+            Wrapper.appendChild(div);
+        });
+        this.TocWrapper.appendChild(Wrapper);
+        document.body.appendChild(this.TocWrapper);
+        console.log(this.TocWrapper);
     };
     return mvmEditorViewer;
 }());

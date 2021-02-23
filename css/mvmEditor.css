@@ -23,9 +23,11 @@
   overflow:hidden;
   box-sizing:border-box;
   border-bottom:1px solid #eee;
+  display:flex;
 }
-.mvm-edit-wrapper .editorarea{float:left;width:50%;overflow:hidden}
-.mvm-edit-wrapper .preivewarea{float:left;width:50%;overflow:auto}
+.mvm-edit-wrapper .tocarea{min-width:100px;white-space: nowrap;border-right:1px solid #eee;}
+.mvm-edit-wrapper .editorarea{width:50%;overflow:hidden}
+.mvm-edit-wrapper .preivewarea{width:50%;overflow:auto}
 button.active{
   background-color:#dbdbdb !important;
 }
@@ -105,3 +107,18 @@ button.active{
 
 .mvm-chartWrapper::after{clear: both;display:table;content: '';}
 .mvm-chartArea, .mvm-chartPreview{float:left;width:50%;position: relative;height:100%;}
+
+.mvm-Toc-left-border{
+  border-left: 2px solid rgb(233, 236, 239);
+}
+.mvm-Toc-right-border{
+  border-right: 2px solid rgb(233, 236, 239);
+}
+.mvm-Toc{  
+  font-size:0.875rem;
+  line-height:1.5;
+}
+.mvm-Toc-List{
+  color:rgb(134, 142, 150);
+  transition:all 0.125s ease-in 0s;
+}

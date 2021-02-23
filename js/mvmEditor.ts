@@ -50,18 +50,20 @@ class mvmEditor {
     uploadurl: "",
     uploadname:"bf_file",
     editorurl: location.origin,
-    toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen']
+    toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc']
   };
   constructor (option:editorOpt) {
     this.opt = {
       width : 100,
       height: 300,
       defaultValue:'',
-      toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen'],
+      toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc'],
       ...option
     }
     const self = this;
     this.TocWrapper = document.createElement('div');
+    this.TocWrapper.classList.add('tocarea');
+    this.TocWrapper.classList.add('hide');
     this.ChartTempSave = document.createElement('div');
 
     this.ImageInput = document.createElement('input');
@@ -82,7 +84,6 @@ class mvmEditor {
         const { endLineNumber, endColumn } = this.editor.getSelection()
         this.editor.setPosition({ lineNumber: endLineNumber, column: endColumn })
       }
-      console.log(e.target);
       e.target.value = "";
     })
     this.codeArea = document.createElement('div');
@@ -119,7 +120,6 @@ class mvmEditor {
     this.preview.style.height = `${this.opt.height}px`;
     this.preview.style.overflow = "auto";
     const defaultValue = this.opt.defaultValue ? this.opt.defaultValue :'';
-    console.log(this.opt.editorurl);
     require.config({
       paths: { vs: `${this.opt.editorurl}/js/monaco-editor/min/vs` }
     });
@@ -188,17 +188,8 @@ class mvmEditor {
           }
         }
       });
-      self.editor.onDidChangeModelContent((e:any) => {
-        const renderer = new marked.Renderer();
-        renderer.code2 = function(body:any, ordered:any, start:any) {
-          //console.log(body, ordered,start);
-          var temp = `<pre><code class="language-${ordered}">${body}</code></pre>`;
-          return temp;
-        }
-      
-        const html = marked(self.editor.getValue(), { 
-          renderer: renderer 
-        });
+      self.editor.onDidChangeModelContent((e:any) => {     
+        const html = marked(self.editor.getValue());
         const sanitized = DOMPurify.sanitize(html, '');        
         while ( self.preview.hasChildNodes() ) {
           if(self.preview.firstChild) {
@@ -319,15 +310,24 @@ class mvmEditor {
       this.previewBtn.classList.add('active');
     } 
   }
+  TocToggle(){
+    if(this.TocWrapper.classList.contains('hide')) {
+      this.TocWrapper.classList.remove('hide');
+    }else {
+      this.TocWrapper.classList.add('hide');
+    } 
+  }
   Toc(H:Array<HTMLElement>) {
     let paddingH:number = -1;
     let padding:number;
     //console.log('H', H);
     this.TocWrapper.innerHTML = '';
+    const Wrapper = document.createElement('div');
+    Wrapper.classList.add('mvm-Toc');
     H.forEach((node, i) => {
       const Num = /h([1-6])/i.exec(node.nodeName);
       const div = document.createElement('div');
-      console.log('Num', Num);
+      div.classList.add('mvm-Toc-List');
       if(Num) {
         if(i === 0) {
           paddingH = parseInt(Num[1]);
@@ -336,15 +336,14 @@ class mvmEditor {
           paddingH = parseInt(Num[1]);
         }
         padding = (parseInt(Num[1]) - 1) - (paddingH - 1);
-        console.log('paddingH', paddingH);
-        console.log('padding', padding);
-        div.style.paddingLeft = `${padding * 15}px`;
+        div.style.paddingLeft = `${padding * 11}px`;
       }
       div.textContent = node.textContent;
-      this.TocWrapper.appendChild(div);
+      Wrapper.appendChild(div);
     });
+    this.TocWrapper.appendChild(Wrapper);
     //console.log(TocWrapper);
-    document.body.appendChild(this.TocWrapper);
+    this.editorWrapper.insertBefore(this.TocWrapper, this.editarea);
   }
   CreateMenu() {
     const undo = this.iconAppend('fas fa-undo');
@@ -413,11 +412,23 @@ class mvmEditor {
     const fullscreen = this.iconAppend('fas fa-expand');
     fullscreen.addEventListener('click', ()=>this.FullScreeen())
     fullscreen.dataset.tooptip = "전체화면";
+    const Toc = this.iconAppend('far fa-address-book');
+    Toc.addEventListener('click', ()=>this.TocToggle())
+    Toc.dataset.tooptip = "Toc(Table of Contents)";
+    Toc.classList.add('balloon-right');
+    Toc.style.float = "right";
     const info = this.iconAppend('fas fa-question');
     info.addEventListener('click', ()=>this.CreateInfo())
     info.dataset.tooptip = "에디터 정보";
     info.classList.add('balloon-right');
     info.style.float = "right";
+    const preveiw = this.iconAppend('far fa-eye');
+    preveiw.addEventListener('click', ()=>this.previewToggle())
+    preveiw.dataset.tooptip = "미리보기";
+    preveiw.classList.add('balloon-right');
+    preveiw.style.float = "right";
+    this.menuArea.appendChild(info);
+    this.menuArea.appendChild(preveiw);
     this.opt.toolbar?.forEach(name => {
       if(name.toLowerCase() === "undo") this.menuArea.appendChild(undo);
       if(name.toLowerCase() === "redo") this.menuArea.appendChild(redo);
@@ -433,8 +444,9 @@ class mvmEditor {
       if(name.toLowerCase() === "blockquote") this.menuArea.appendChild(blockquote);
       if(name.toLowerCase() === "chart") this.menuArea.appendChild(chart);
       if(name.toLowerCase() === "fullscreen") this.menuArea.appendChild(fullscreen);
-      if(name.toLowerCase() === "info") this.menuArea.appendChild(info);
+      if(name.toLowerCase() === "toc") this.menuArea.appendChild(Toc);
     });
+    //this.menuArea.appendChild(Toc)
     /*
     this.menuArea.appendChild(undo);
     this.menuArea.appendChild(redo);
@@ -660,9 +672,7 @@ class mvmEditor {
     this.RemoveModal();
   }
   async ImageUpload(File:File) {
-    console.log(this.opt.Upload);
     if(this.opt.Upload) {
-      console.log('실행');
       return this.opt.Upload(File);
     } else {
       const formData = new FormData();
@@ -684,12 +694,15 @@ interface ViewerOpt{
   ele:string,
   cssClass:string,
   content?:string,
+  tocPos?:string,
 }
 class mvmEditorViewer {
   private opt:ViewerOpt = {
     ele:"body",
     cssClass:'markdown-body',
+    tocPos : "right",
   };
+  private TocWrapper:HTMLElement = document.createElement('div');
   constructor(option:ViewerOpt) {
     const self = this;
     this.opt = {
@@ -703,10 +716,12 @@ class mvmEditorViewer {
       hljs.initHighlightingOnLoad();
     });
   }
-  innerHTML (Html:string) {
+  async innerHTML (Html:string) {
     const viewer = document.querySelector(this.opt.ele);
-    if(viewer)
+    if(viewer) {
       viewer.innerHTML = Html;
+      this.Toc();
+    }
   }
   getMarkdown () {
     const turndownService:any = new TurndownService({
@@ -715,5 +730,45 @@ class mvmEditorViewer {
     })
     const markdown = turndownService.turndown(document.querySelector(this.opt.ele)?.innerHTML);
     return markdown;
+  }
+  Toc () {
+    const H:Array<HTMLElement> = [];
+    const pos = document.querySelector(this.opt.ele)?.getBoundingClientRect();
+    const nodeList = document.querySelector(this.opt.ele)?.children;
+    this.TocWrapper.style.position = "fixed";
+    this.TocWrapper.style.zIndex = '1000';
+    this.TocWrapper.style.left = `${pos?.right - this.TocWrapper.clientWidth}px`;
+    this.TocWrapper.style.top = `${pos?.y}px`;
+
+    console.log('nodeList', nodeList);
+    Array.prototype.forEach.call(nodeList, (node:HTMLElement) => {
+      if((/h[1-6]/i).test(node.nodeName)) {
+        H.push(node.cloneNode(true) as HTMLElement);
+      }
+    });
+    let paddingH:number = -1;
+    let padding:number;
+    const Wrapper = document.createElement('div');
+    Wrapper.classList.add('mvm-Toc');
+    H.forEach((node, i) => {
+      const Num = /h([1-6])/i.exec(node.nodeName);
+      const div = document.createElement('div');
+      div.classList.add('mvm-Toc-List');
+      if(Num) {
+        if(i === 0) {
+          paddingH = parseInt(Num[1]);
+        }
+        if(paddingH > parseInt(Num[1])) {
+          paddingH = parseInt(Num[1]);
+        }
+        padding = (parseInt(Num[1]) - 1) - (paddingH - 1);
+        div.style.paddingLeft = `${padding * 11}px`;
+      }
+      div.textContent = node.textContent;
+      Wrapper.appendChild(div);
+    });
+    this.TocWrapper.appendChild(Wrapper);
+    document.body.appendChild(this.TocWrapper);
+    console.log(this.TocWrapper);
   }
 }
