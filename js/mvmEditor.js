@@ -480,6 +480,23 @@ var mvmEditor = /** @class */ (function () {
             if (name.toLowerCase() === "toc")
                 _this.menuArea.appendChild(Toc);
         });
+        var Heading = this.DropdownMenu({
+            title: 'fas fa-heading',
+            menu: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
+        });
+        Heading[0].dataset.tooptip = "제목";
+        Heading[1].forEach(function (li, i) {
+            var H = '';
+            for (var k = 0; k < i + 1; k++) {
+                H += '#';
+            }
+            li.addEventListener('click', function () {
+                var _a;
+                _this.InsertTemplate(H + " \r\n", "");
+                (_a = document.querySelector('.mvm-Dropdown')) === null || _a === void 0 ? void 0 : _a.remove();
+            });
+        });
+        this.menuArea.appendChild(Heading[0]);
         //this.menuArea.appendChild(Toc)
         /*
         this.menuArea.appendChild(undo);
@@ -694,6 +711,31 @@ var mvmEditor = /** @class */ (function () {
         if (this.codeKeyup)
             this.codeKeyup.dispose();
         this.modalWrapper.remove();
+    };
+    mvmEditor.prototype.DropdownMenu = function (data) {
+        var button = this.iconAppend(data.title);
+        var dropdown = document.createElement('ul');
+        dropdown.classList.add('mvm-Dropdown');
+        var list = [];
+        data.menu.forEach(function (title, i) {
+            var li = document.createElement('li');
+            li.textContent = title;
+            li.classList.add('mvm-Dropdown-List');
+            list.push(li);
+            dropdown.appendChild(li);
+        });
+        button.addEventListener('click', function () {
+            if (document.querySelector('.mvm-Dropdown')) {
+                dropdown.remove();
+            }
+            else {
+                var pos = button.getBoundingClientRect();
+                dropdown.style.top = pos.y + button.clientHeight + "px";
+                dropdown.style.left = pos.x + "px";
+                document.body.appendChild(dropdown);
+            }
+        });
+        return [button, list];
     };
     mvmEditor.prototype.InsertCode = function (langTitle) {
         var value = this.codeEditor.getValue();

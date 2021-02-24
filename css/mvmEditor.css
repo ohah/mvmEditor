@@ -122,3 +122,29 @@ button.active{
   color:rgb(134, 142, 150);
   transition:all 0.125s ease-in 0s;
 }
+.mvm-Dropdown-List{
+  border-bottom:1px solid rgb(233, 236, 239);
+  transition:all 0.125s ease-in 0s;
+  padding:5px;
+  list-style:none;
+  min-width:60px;
+  cursor:pointer;
+  font-size:10px;
+  font-weight:800;
+}
+.mvm-Dropdown-List:hover{
+  background-color:#ccc;
+}
+.mvm-Dropdown{
+  padding: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+  margin:0;
+  position: fixed;
+  transition:all 0.125s ease-in 0s;
+  background:#fff;
+  border:1px solid #dbdbdb;
+  border-radius: 8px;
+  z-index: 929;
+}

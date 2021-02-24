@@ -26,7 +26,10 @@ interface editorOpt {
   toolbar?:Array<string>,
   Upload?:(File:File)=>Object
 }
-
+interface DropdownType {
+  title:string,
+  menu:Array<string>,
+}
 class mvmEditor {
   private wrapper!: HTMLElement | null;
   private preview:HTMLElement;
@@ -446,6 +449,22 @@ class mvmEditor {
       if(name.toLowerCase() === "fullscreen") this.menuArea.appendChild(fullscreen);
       if(name.toLowerCase() === "toc") this.menuArea.appendChild(Toc);
     });
+    const Heading = this.DropdownMenu({
+      title:'fas fa-heading',
+      menu:['H1','H2','H3','H4','H5','H6'],
+    });
+    Heading[0].dataset.tooptip = "제목";
+    Heading[1].forEach((li, i) => {
+      let H:string = '';
+      for(let k=0; k<i+1; k++) {
+        H += '#';
+      }
+      li.addEventListener('click', ()=>{
+        this.InsertTemplate(`${H} \r\n`, "");
+        document.querySelector('.mvm-Dropdown')?.remove();
+      });
+    });
+    this.menuArea.appendChild(Heading[0]);
     //this.menuArea.appendChild(Toc)
     /*
     this.menuArea.appendChild(undo);
@@ -660,6 +679,30 @@ class mvmEditor {
     }
     if(this.codeKeyup) this.codeKeyup.dispose();
     this.modalWrapper.remove();
+  }
+  DropdownMenu(data:DropdownType):[HTMLElement , HTMLElement[]] {
+    const button = this.iconAppend(data.title);
+    const dropdown = document.createElement('ul');
+    dropdown.classList.add('mvm-Dropdown');
+    const list:Array<HTMLElement> = [];
+    data.menu.forEach((title,i) => {
+      const li = document.createElement('li');
+      li.textContent = title;
+      li.classList.add('mvm-Dropdown-List');
+      list.push(li);
+      dropdown.appendChild(li);
+    });
+    button.addEventListener('click', ()=>{
+      if(document.querySelector('.mvm-Dropdown')){
+        dropdown.remove();
+      } else {
+        const pos = button.getBoundingClientRect();
+        dropdown.style.top = `${pos.y + button.clientHeight}px`;
+        dropdown.style.left = `${pos.x}px`;
+        document.body.appendChild(dropdown);
+      }
+    });
+    return [button, list];
   }
   InsertCode(langTitle?:String) {
     const value = this.codeEditor.getValue();
