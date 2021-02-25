@@ -56,9 +56,9 @@ var mvmEditor = /** @class */ (function () {
             uploadurl: "",
             uploadname: "bf_file",
             editorurl: location.origin,
-            toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc']
+            toolbar: ['undo', 'redo', 'heading', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc']
         };
-        this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc'] }, option);
+        this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'heading', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc'] }, option);
         var self = this;
         this.TocWrapper = document.createElement('div');
         this.TocWrapper.classList.add('tocarea');
@@ -448,6 +448,22 @@ var mvmEditor = /** @class */ (function () {
         preveiw.style.float = "right";
         this.menuArea.appendChild(info);
         this.menuArea.appendChild(preveiw);
+        var Heading = this.DropdownMenu({
+            title: 'fas fa-heading',
+            menu: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
+        });
+        Heading[0].dataset.tooptip = "제목";
+        Heading[1].forEach(function (li, i) {
+            var H = '';
+            for (var k = 0; k < i + 1; k++) {
+                H += '#';
+            }
+            li.addEventListener('click', function () {
+                var _a;
+                _this.InsertTemplate("\r\n", H + " ");
+                (_a = document.querySelector('.mvm-Dropdown')) === null || _a === void 0 ? void 0 : _a.remove();
+            });
+        });
         (_a = this.opt.toolbar) === null || _a === void 0 ? void 0 : _a.forEach(function (name) {
             if (name.toLowerCase() === "undo")
                 _this.menuArea.appendChild(undo);
@@ -479,24 +495,9 @@ var mvmEditor = /** @class */ (function () {
                 _this.menuArea.appendChild(fullscreen);
             if (name.toLowerCase() === "toc")
                 _this.menuArea.appendChild(Toc);
+            if (name.toLowerCase() === "heading")
+                _this.menuArea.appendChild(Heading[0]);
         });
-        var Heading = this.DropdownMenu({
-            title: 'fas fa-heading',
-            menu: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
-        });
-        Heading[0].dataset.tooptip = "제목";
-        Heading[1].forEach(function (li, i) {
-            var H = '';
-            for (var k = 0; k < i + 1; k++) {
-                H += '#';
-            }
-            li.addEventListener('click', function () {
-                var _a;
-                _this.InsertTemplate(H + " \r\n", "");
-                (_a = document.querySelector('.mvm-Dropdown')) === null || _a === void 0 ? void 0 : _a.remove();
-            });
-        });
-        this.menuArea.appendChild(Heading[0]);
         //this.menuArea.appendChild(Toc)
         /*
         this.menuArea.appendChild(undo);

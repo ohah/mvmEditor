@@ -53,14 +53,14 @@ class mvmEditor {
     uploadurl: "",
     uploadname:"bf_file",
     editorurl: location.origin,
-    toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc']
+    toolbar : ['undo', 'redo', 'heading', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc']
   };
   constructor (option:editorOpt) {
     this.opt = {
       width : 100,
       height: 300,
       defaultValue:'',
-      toolbar : ['undo', 'redo', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc'],
+      toolbar : ['undo', 'redo', 'heading', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc'],
       ...option
     }
     const self = this;
@@ -432,6 +432,21 @@ class mvmEditor {
     preveiw.style.float = "right";
     this.menuArea.appendChild(info);
     this.menuArea.appendChild(preveiw);
+    const Heading = this.DropdownMenu({
+      title:'fas fa-heading',
+      menu:['H1','H2','H3','H4','H5','H6'],
+    });
+    Heading[0].dataset.tooptip = "제목";
+    Heading[1].forEach((li, i) => {
+      let H:string = '';
+      for(let k=0; k<i+1; k++) {
+        H += '#';
+      }
+      li.addEventListener('click', ()=>{
+        this.InsertTemplate(`\r\n`, `${H} `);
+        document.querySelector('.mvm-Dropdown')?.remove();
+      });
+    });
     this.opt.toolbar?.forEach(name => {
       if(name.toLowerCase() === "undo") this.menuArea.appendChild(undo);
       if(name.toLowerCase() === "redo") this.menuArea.appendChild(redo);
@@ -448,23 +463,8 @@ class mvmEditor {
       if(name.toLowerCase() === "chart") this.menuArea.appendChild(chart);
       if(name.toLowerCase() === "fullscreen") this.menuArea.appendChild(fullscreen);
       if(name.toLowerCase() === "toc") this.menuArea.appendChild(Toc);
+      if(name.toLowerCase() === "heading") this.menuArea.appendChild(Heading[0]);
     });
-    const Heading = this.DropdownMenu({
-      title:'fas fa-heading',
-      menu:['H1','H2','H3','H4','H5','H6'],
-    });
-    Heading[0].dataset.tooptip = "제목";
-    Heading[1].forEach((li, i) => {
-      let H:string = '';
-      for(let k=0; k<i+1; k++) {
-        H += '#';
-      }
-      li.addEventListener('click', ()=>{
-        this.InsertTemplate(`${H} \r\n`, "");
-        document.querySelector('.mvm-Dropdown')?.remove();
-      });
-    });
-    this.menuArea.appendChild(Heading[0]);
     //this.menuArea.appendChild(Toc)
     /*
     this.menuArea.appendChild(undo);

@@ -27,7 +27,7 @@ const ed = new mvmEditor({
     dom: "#mvmEditor", //변환할 div
     uploadurl : "https://test", // 이미지를 업로드해야 할 경우 이미지 업로드를 받는 백앤드 서버의 주소
     editorurl:"http://127.0.0.1:5500", //에디터가 올려진 파일의 경로.
-    toolbar : ['listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen'] //툴바 옵션
+    toolbar : ['header', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen'] //툴바 옵션
 });
 ```
 
@@ -71,3 +71,5 @@ Upload: async function uploadImage(blob) {
 
 
 ### 차트기능 추가 중.
+
+### 목차(플로팅 레이어 기능 추가 중)
