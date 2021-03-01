@@ -121,7 +121,12 @@ button.active{
 .mvm-Toc-List{
   color:rgb(134, 142, 150);
   transition:all 0.125s ease-in 0s;
+  cursor: pointer;
 }
+.mvm-Toc-List:hover{
+  font-weight: 900;
+}
+.mvm-Toc .font-bold{font-weight: 900;}
 .mvm-Dropdown-List{
   border-bottom:1px solid rgb(233, 236, 239);
   transition:all 0.125s ease-in 0s;

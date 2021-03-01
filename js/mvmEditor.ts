@@ -24,6 +24,7 @@ interface editorOpt {
   uploadname:string,
   editorurl:string,
   toolbar?:Array<string>,
+  lineNumber?:boolean,
   Upload?:(File:File)=>Object
 }
 interface DropdownType {
@@ -53,13 +54,15 @@ class mvmEditor {
     uploadurl: "",
     uploadname:"bf_file",
     editorurl: location.origin,
-    toolbar : ['undo', 'redo', 'heading', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc']
+    toolbar : ['undo', 'redo', 'heading', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc'],
+    lineNumber: false,
   };
   constructor (option:editorOpt) {
     this.opt = {
       width : 100,
       height: 300,
       defaultValue:'',
+      lineNumber:false,
       toolbar : ['undo', 'redo', 'heading', 'listul', 'listol','italic','bold','strikethrough','image','link','table','code','chart','fullscreen', 'Toc'],
       ...option
     }
@@ -95,7 +98,6 @@ class mvmEditor {
     this.modalWrapper.classList.add('mvm-modal-wrapper');
     this.modalWrapper.addEventListener('click', ()=>this.RemoveModal());
 
-
     document.addEventListener('DOMContentLoaded', (event) => {
       self.wrapper = document.querySelector(this.opt.dom)
       self.wrapper?.classList.add('mvm-wrapper');
@@ -114,15 +116,34 @@ class mvmEditor {
     this.previewBtn.textContent = '미리보기';
     this.previewBtn.classList.add('previewBtn');
     
-
     this.editarea = document.createElement('div');
     this.editarea.classList.add('editorarea');
     this.editarea.style.height = `${this.opt.height}px`;
     this.preview = document.createElement('div');
+    this.preview.addEventListener('scroll', (e:any)=>{
+      console.log('e', e.target.scrollTop);
+    })
     this.preview.classList.add('preivewarea', 'markdown-body');
     this.preview.style.height = `${this.opt.height}px`;
     this.preview.style.overflow = "auto";
     const defaultValue = this.opt.defaultValue ? this.opt.defaultValue :'';
+    marked.setOptions({
+      highlight: (code:string, lang:string) => {
+        if(lang === 'apexchart') {
+          //console.log('callback', callback);
+          //callback(chartDiv);
+          return `<div data-chart='apexchart' data-chartdata='${code}'></div>`;
+        }
+        else if(lang === 'uml') {
+          //console.log('callback', callback);
+          //callback(chartDiv);
+          return `<div class="mermaid"></div>`;
+        }
+        else {
+          return hljs.highlightAuto(code).value;
+        }
+      }
+    })
     require.config({
       paths: { vs: `${this.opt.editorurl}/js/monaco-editor/min/vs` }
     });
@@ -142,13 +163,12 @@ class mvmEditor {
         scrollBeyondLastLine: false
       });
       self.editor = monaco.editor.create(self.editarea, {
-        
         theme: "vs",
         wordWrap: true,
         fontFamily: 'Nanum Gothic Coding',
         automaticLayout: true,
         value: defaultValue,
-        lineNumbers : false , 
+        lineNumbers : self.opt.lineNumber, 
         //fontSize : 20,
         wrappingStrategy: "advanced",
         //language: 'javascript'
@@ -158,7 +178,7 @@ class mvmEditor {
         scrollBeyondLastLine: false
       });
       self.editor.onDidPaste((e:any) => {
-      })
+      });
       self.editor.onDidFocusEditorText((e:any)=>{
         focuseditor = self.editor;
       });
@@ -249,18 +269,7 @@ class mvmEditor {
         self.Toc(H);
         //console.log(H);
       });
-      marked.setOptions({
-        highlight: (code:string, lang:string) => {
-          if(lang === 'apexchart') {
-            //console.log('callback', callback);
-            //callback(chartDiv);
-            return `<div data-chart='apexchart' data-chartdata='${code}'></div>`;
-          }
-          else {
-            return hljs.highlightAuto(code).value;
-          }
-        }
-      })
+     
       const html = marked(self.editor.getValue());
       const sanitized = DOMPurify.sanitize(html, '');
       self.preview.innerHTML = sanitized;
@@ -269,7 +278,6 @@ class mvmEditor {
       self.wrapper?.appendChild(self.menuArea);
       self.wrapper?.appendChild(self.editorWrapper);
       self.wrapper?.appendChild(self.previewBtn);
-
     });
   }
   getMarkdown () {
@@ -342,6 +350,15 @@ class mvmEditor {
         div.style.paddingLeft = `${padding * 11}px`;
       }
       div.textContent = node.textContent;
+      div.dataset.id = node.id;
+      console.log('div',div);
+      div.addEventListener("click", ()=>{
+        location.href = `#${div.dataset.id}`;
+        this.TocWrapper.querySelectorAll('.mvm-Toc-List').forEach((ele)=>{
+          ele.classList.remove('font-bold');
+        });
+        div.classList.add('font-bold');
+      });
       Wrapper.appendChild(div);
     });
     this.TocWrapper.appendChild(Wrapper);
@@ -388,10 +405,10 @@ class mvmEditor {
     image.addEventListener('click', ()=>this.ImageInput.click())
     image.dataset.tooptip = "이미지 업로드";
     const link = this.iconAppend('fas fa-link');
-    link.addEventListener('click', ()=>{
+    link.addEventListener('click', ()=> {
       const text = this.getSelectionText();
       this.InsertTemplate(`)`, `[${text}](`)
-    })
+    });
     link.dataset.tooptip = "링크";
     const table = this.iconAppend('fas fa-table');
     const tableDefalut = [
@@ -640,6 +657,7 @@ class mvmEditor {
     confirm.classList.add('mvm-button');
     confirm.textContent = '확인';
     this.codeArea.style.height = (window.innerHeight - 200) + "px";
+    selectLang.add(this.optionElement('uml'))
     selectLang.add(this.optionElement('javascript'))
     selectLang.add(this.optionElement('typescript'))
     selectLang.add(this.optionElement('html'))
@@ -808,6 +826,10 @@ class mvmEditorViewer {
         div.style.paddingLeft = `${padding * 11}px`;
       }
       div.textContent = node.textContent;
+      div.dataset.id = node.id;
+      div.addEventListener("click", ()=>{
+        location.href = `#${div.dataset.id}`;
+      })
       Wrapper.appendChild(div);
     });
     this.TocWrapper.appendChild(Wrapper);

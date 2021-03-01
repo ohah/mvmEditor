@@ -21,6 +21,8 @@
 	<script src="./js/turndown.js"></script>
 	<script src="./js/mvmEditor.js"></script>
 	<script src="./js/nodify-string.min.js"></script>
+	<!-- <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+	<script>mermaid.initialize({startOnLoad:true});</script> -->
 	<script>
 		const ed = new mvmEditor({
 			dom: "#mvmEditor",
@@ -34,21 +36,39 @@
 		const tet = new mvmEditor({
 			dom: "#mvmEditor2",
 			uploadurl : "https://test",
-			editorurl:"http://127.0.0.1:5500"
+			editorurl:"http://127.0.0.1:5500",
+			lineNumber : true,
 		});
 		const viewer = new mvmEditorViewer({
 			ele: "#mvmViewer",
 			content : `<h2> 무야호 </h2>`,
 		});
 	</script>
-	<div>
+<div>
 <pre id="testCode" style="">
 ### ㅁㄴㅇㄹ
 #### ㅁㄴㅇㄹ
 
-
 ## ㅁㄴㅇㄹ
 ### ㅁㄴㅇㄹ
+
+### ㅁㄴㅇㄻ
+ㅁㄴㅇㄹㅁㄴㅇㄹ  
+ㅁㄴㅇㄹㅁㄴㅇㄹㄻㄴ  
+ㅇㄹ  
+ㅁㄴㅇㄹㅁㄴㅇㄹㅁㅇㄴ  
+ㄻㅇ  
+ㄴㄹ  
+ㅁㄴㅇㄹㅁㄴㅇㄹㅁㅇㄴㄻㄴ  
+ㅇㄹㅁㄴㅇㄹ  
+ㅁㄴㅇㄹㅁㄴㅇ  
+ㄻ  
+ㄴㅇㄹ  
+ㅁㄴㅇㄹ  
+ㅁㄴㅇㄹㅁㄴ  
+ㅇㄻㄴ  
+ㅇㄹㅁㄴㅇㄹㄹ  
+
 </pre>
 		<div id="mvmViewer"></div>
 		<div id="mvmEditor"></div>

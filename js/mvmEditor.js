@@ -56,9 +56,10 @@ var mvmEditor = /** @class */ (function () {
             uploadurl: "",
             uploadname: "bf_file",
             editorurl: location.origin,
-            toolbar: ['undo', 'redo', 'heading', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc']
+            toolbar: ['undo', 'redo', 'heading', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc'],
+            lineNumber: false
         };
-        this.opt = __assign({ width: 100, height: 300, defaultValue: '', toolbar: ['undo', 'redo', 'heading', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc'] }, option);
+        this.opt = __assign({ width: 100, height: 300, defaultValue: '', lineNumber: false, toolbar: ['undo', 'redo', 'heading', 'listul', 'listol', 'italic', 'bold', 'strikethrough', 'image', 'link', 'table', 'code', 'chart', 'fullscreen', 'Toc'] }, option);
         var self = this;
         this.TocWrapper = document.createElement('div');
         this.TocWrapper.classList.add('tocarea');
@@ -117,6 +118,9 @@ var mvmEditor = /** @class */ (function () {
         this.editarea.classList.add('editorarea');
         this.editarea.style.height = this.opt.height + "px";
         this.preview = document.createElement('div');
+        this.preview.addEventListener('scroll', function (e) {
+            console.log('e', e.target.scrollTop);
+        });
         this.preview.classList.add('preivewarea', 'markdown-body');
         this.preview.style.height = this.opt.height + "px";
         this.preview.style.overflow = "auto";
@@ -147,7 +151,7 @@ var mvmEditor = /** @class */ (function () {
                 fontFamily: 'Nanum Gothic Coding',
                 automaticLayout: true,
                 value: defaultValue,
-                lineNumbers: false,
+                lineNumbers: self.opt.lineNumber,
                 //fontSize : 20,
                 wrappingStrategy: "advanced",
                 //language: 'javascript'
@@ -269,6 +273,11 @@ var mvmEditor = /** @class */ (function () {
                         //callback(chartDiv);
                         return "<div data-chart='apexchart' data-chartdata='" + code + "'></div>";
                     }
+                    else if (lang === 'uml') {
+                        //console.log('callback', callback);
+                        //callback(chartDiv);
+                        return "<div class=\"mermaid\"></div>";
+                    }
                     else {
                         return hljs.highlightAuto(code).value;
                     }
@@ -335,6 +344,7 @@ var mvmEditor = /** @class */ (function () {
         }
     };
     mvmEditor.prototype.Toc = function (H) {
+        var _this = this;
         var paddingH = -1;
         var padding;
         //console.log('H', H);
@@ -356,6 +366,15 @@ var mvmEditor = /** @class */ (function () {
                 div.style.paddingLeft = padding * 11 + "px";
             }
             div.textContent = node.textContent;
+            div.dataset.id = node.id;
+            console.log('div', div);
+            div.addEventListener("click", function () {
+                location.href = "#" + div.dataset.id;
+                _this.TocWrapper.querySelectorAll('.mvm-Toc-List').forEach(function (ele) {
+                    ele.classList.remove('font-bold');
+                });
+                div.classList.add('font-bold');
+            });
             Wrapper.appendChild(div);
         });
         this.TocWrapper.appendChild(Wrapper);
@@ -675,6 +694,7 @@ var mvmEditor = /** @class */ (function () {
         confirm.classList.add('mvm-button');
         confirm.textContent = '확인';
         this.codeArea.style.height = (window.innerHeight - 200) + "px";
+        selectLang.add(this.optionElement('uml'));
         selectLang.add(this.optionElement('javascript'));
         selectLang.add(this.optionElement('typescript'));
         selectLang.add(this.optionElement('html'));
@@ -855,6 +875,10 @@ var mvmEditorViewer = /** @class */ (function () {
                 div.style.paddingLeft = padding * 11 + "px";
             }
             div.textContent = node.textContent;
+            div.dataset.id = node.id;
+            div.addEventListener("click", function () {
+                location.href = "#" + div.dataset.id;
+            });
             Wrapper.appendChild(div);
         });
         this.TocWrapper.appendChild(Wrapper);
