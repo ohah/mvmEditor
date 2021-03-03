@@ -125,6 +125,23 @@ var mvmEditor = /** @class */ (function () {
         this.preview.style.height = this.opt.height + "px";
         this.preview.style.overflow = "auto";
         var defaultValue = this.opt.defaultValue ? this.opt.defaultValue : '';
+        marked.setOptions({
+            highlight: function (code, lang) {
+                if (lang === 'apexchart') {
+                    //console.log('callback', callback);
+                    //callback(chartDiv);
+                    return "<div data-chart='apexchart' data-chartdata='" + code + "'></div>";
+                }
+                else if (lang === 'uml') {
+                    //console.log('callback', callback);
+                    //callback(chartDiv);
+                    return "<div class=\"mermaid\"></div>";
+                }
+                else {
+                    return hljs.highlightAuto(code).value;
+                }
+            }
+        });
         require.config({
             paths: { vs: this.opt.editorurl + "/js/monaco-editor/min/vs" }
         });
@@ -265,23 +282,6 @@ var mvmEditor = /** @class */ (function () {
                 //const html = marked.parser(tokens);
                 self.Toc(H);
                 //console.log(H);
-            });
-            marked.setOptions({
-                highlight: function (code, lang) {
-                    if (lang === 'apexchart') {
-                        //console.log('callback', callback);
-                        //callback(chartDiv);
-                        return "<div data-chart='apexchart' data-chartdata='" + code + "'></div>";
-                    }
-                    else if (lang === 'uml') {
-                        //console.log('callback', callback);
-                        //callback(chartDiv);
-                        return "<div class=\"mermaid\"></div>";
-                    }
-                    else {
-                        return hljs.highlightAuto(code).value;
-                    }
-                }
             });
             var html = marked(self.editor.getValue());
             var sanitized = DOMPurify.sanitize(html, '');
