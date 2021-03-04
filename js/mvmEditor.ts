@@ -2,13 +2,14 @@
 //import marked from "./marked.min.js";
 //import 'https://cdn.jsdelivr.net/npm/monaco-editor/min/vs/loader.js';
 //const TurndownService = require('./turndown')
-declare var require: any;
-declare var TurndownService: any;
-declare var focuseditor: any;
-declare var ApexCharts: any;
+declare let require: any;
+declare const TurndownService: any;
+declare let focuseditor: any;
+declare const ApexCharts: any;
+declare const mermaid: any;
 declare var Promise: any;
-declare var codeEditor: any;
-declare var hljs: any;
+declare const codeEditor: any;
+declare const hljs: any;
 declare const nodifyString:any;
 //declare const window:any;
 declare const monaco:any;
@@ -121,7 +122,7 @@ class mvmEditor {
     this.editarea.style.height = `${this.opt.height}px`;
     this.preview = document.createElement('div');
     this.preview.addEventListener('scroll', (e:any)=>{
-      console.log('e', e.target.scrollTop);
+      //console.log('e', e.target.scrollTop);
     })
     this.preview.classList.add('preivewarea', 'markdown-body');
     this.preview.style.height = `${this.opt.height}px`;
@@ -137,7 +138,7 @@ class mvmEditor {
         else if(lang === 'uml') {
           //console.log('callback', callback);
           //callback(chartDiv);
-          return `<div class="mermaid"></div>`;
+          return `<div class="mermaid">${code}</div>`;
         }
         else {
           return hljs.highlightAuto(code).value;
@@ -162,6 +163,7 @@ class mvmEditor {
         minimap: { enabled: true },
         scrollBeyondLastLine: false
       });
+      console.log('?으흐음');
       self.editor = monaco.editor.create(self.editarea, {
         theme: "vs",
         wordWrap: true,
@@ -264,6 +266,10 @@ class mvmEditor {
             }
           }
         });
+        setTimeout(() => {
+          
+          mermaid.init(undefined, '.mermaid');
+        }, 1000);
         //const tokens = marked.lexer(value);
         //const html = marked.parser(tokens);
         self.Toc(H);
@@ -288,6 +294,7 @@ class mvmEditor {
     return this.editor.getValue();
   }
   setMarkdown(text:string) {
+    console.log(this.editor);
     this.editor.setValue(text);
   }
   setHtml(text:string) {

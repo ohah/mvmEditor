@@ -119,12 +119,29 @@ var mvmEditor = /** @class */ (function () {
         this.editarea.style.height = this.opt.height + "px";
         this.preview = document.createElement('div');
         this.preview.addEventListener('scroll', function (e) {
-            console.log('e', e.target.scrollTop);
+            //console.log('e', e.target.scrollTop);
         });
         this.preview.classList.add('preivewarea', 'markdown-body');
         this.preview.style.height = this.opt.height + "px";
         this.preview.style.overflow = "auto";
         var defaultValue = this.opt.defaultValue ? this.opt.defaultValue : '';
+        marked.setOptions({
+            highlight: function (code, lang) {
+                if (lang === 'apexchart') {
+                    //console.log('callback', callback);
+                    //callback(chartDiv);
+                    return "<div data-chart='apexchart' data-chartdata='" + code + "'></div>";
+                }
+                else if (lang === 'uml') {
+                    //console.log('callback', callback);
+                    //callback(chartDiv);
+                    return "<div class=\"mermaid\">" + code + "</div>";
+                }
+                else {
+                    return hljs.highlightAuto(code).value;
+                }
+            }
+        });
         require.config({
             paths: { vs: this.opt.editorurl + "/js/monaco-editor/min/vs" }
         });
@@ -145,6 +162,7 @@ var mvmEditor = /** @class */ (function () {
                 minimap: { enabled: true },
                 scrollBeyondLastLine: false
             });
+            console.log('?으흐음');
             self.editor = monaco.editor.create(self.editarea, {
                 theme: "vs",
                 wordWrap: true,
@@ -261,27 +279,13 @@ var mvmEditor = /** @class */ (function () {
                         }
                     }
                 });
+                setTimeout(function () {
+                    mermaid.init(undefined, '.mermaid');
+                }, 1000);
                 //const tokens = marked.lexer(value);
                 //const html = marked.parser(tokens);
                 self.Toc(H);
                 //console.log(H);
-            });
-            marked.setOptions({
-                highlight: function (code, lang) {
-                    if (lang === 'apexchart') {
-                        //console.log('callback', callback);
-                        //callback(chartDiv);
-                        return "<div data-chart='apexchart' data-chartdata='" + code + "'></div>";
-                    }
-                    else if (lang === 'uml') {
-                        //console.log('callback', callback);
-                        //callback(chartDiv);
-                        return "<div class=\"mermaid\"></div>";
-                    }
-                    else {
-                        return hljs.highlightAuto(code).value;
-                    }
-                }
             });
             var html = marked(self.editor.getValue());
             var sanitized = DOMPurify.sanitize(html, '');
@@ -301,6 +305,7 @@ var mvmEditor = /** @class */ (function () {
         return this.editor.getValue();
     };
     mvmEditor.prototype.setMarkdown = function (text) {
+        console.log(this.editor);
         this.editor.setValue(text);
     };
     mvmEditor.prototype.setHtml = function (text) {
