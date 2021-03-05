@@ -135,7 +135,11 @@ var mvmEditor = /** @class */ (function () {
                 else if (lang === 'uml') {
                     //console.log('callback', callback);
                     //callback(chartDiv);
+<<<<<<< HEAD
                     return "<div class=\"mermaid\">" + code + "</div>";
+=======
+                    return "<div class=\"mermaid\"></div>";
+>>>>>>> 0f75f651334d4b963205d8668f48fd258002ac34
                 }
                 else {
                     return hljs.highlightAuto(code).value;
