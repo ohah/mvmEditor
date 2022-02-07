@@ -20,6 +20,7 @@ import rehypeSanitize, {defaultSchema} from 'rehype-sanitize'
 import remarkStringify from 'remark-stringify';
 import rehypeSlug from 'rehype-slug'
 import {is} from 'unist-util-is'
+import {toText} from 'hast-util-to-text'
 
 // import moncaoHighlight from './monaco-highlight';
 // import "URL";
@@ -29,6 +30,13 @@ import { visit } from 'unist-util-visit'
 type Languages = "markdown" | "javascript" | "typescript" | "python" | "cpp" | "c" | "php"
 type Theme = "vs-dark" | "vs"
 type MarkdownStyle = "github" | "github-dark" | "github-light"
+
+interface CustomIScrollEvent extends monaco.IScrollEvent{
+  readonly _oldScrollHeight:number
+  readonly _oldScrollLeft:number
+  readonly _oldScrollTop:number
+  readonly _oldScrollWidth:number
+}
 interface Option {
   element : string
   value?:string
@@ -38,6 +46,7 @@ interface Option {
   preview?:boolean
   markdownStyle? : MarkdownStyle
 }
+type IScrollEvent = monaco.IScrollEvent;
 
 export class VSCode {
   private monaco:typeof monaco;
@@ -57,7 +66,7 @@ export class VSCode {
   }
   private editor:monaco.editor.IStandaloneCodeEditor;
   private preview:HTMLElement
-  private MARKDOWN_LINE_HEIGHT = 17;
+  private MARKDOWN_LINE_HEIGHT = 19;
   /* 모나코 에디터 라인 높이(단위 px) */
   constructor (option:Option) {
     this.option = {
@@ -92,13 +101,38 @@ export class VSCode {
     this.wrapper.parent.appendChild(this.wrapper.preview);
     this.wrapper.preview.appendChild(this.preview);
   }  
-    
-
-  private async MonacoScrollSync(ScrollEvent:monaco.IScrollEvent) {
-    const { scrollTop } = ScrollEvent;
-    const line = parseInt(`${Math.ceil(scrollTop / this.MARKDOWN_LINE_HEIGHT)}`) + 1;
-    const preview = this.wrapper.preview.querySelector(`[data-start-line="${line}"]`);
-    preview.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+  /**
+   * 편집시 싱크.
+   * 편집 Element를 표시해줌.
+   * @returns 
+   */
+  private async MonacoSync() {
+    const { lineNumber } = this.editor.getPosition();
+    // console.log(Event.selection, line)
+    const nodes = this.wrapper.preview.querySelectorAll(`[data-start-line]`)
+    const list = Array.from(nodes).map((node)=>{
+      const start = parseInt(node.getAttribute('data-start-line'));
+      const end = parseInt(node.getAttribute('data-end-line'));
+      return {
+        node : node,
+        between : end - start === 0 ? Array.from({length : 1}, ()=> start) : Array.from({length : end + 1 - start}, (v, i)=> i + start),
+      }
+    })
+    // console.log('list', list);
+    const preview = this.wrapper.preview.querySelector(`[data-start-line="${lineNumber}"]:not(table)`);
+    const between = list.find((data) => {
+      const { between, node } = data;
+      if(between.includes(lineNumber)) {
+        return true;
+      }
+    })
+    // console.log(line, _oldScrollTop - scrollTop > 0, between)
+    if(between) {
+      const isFocus = this.preview.querySelector('.isFocus');
+      if(isFocus) isFocus.classList.remove('isFocus');
+      between.node.classList.add('isFocus');
+      between.node.scrollIntoView({behavior: "auto", block:"end", inline: "end"});
+    } 
   }
 
   public async initialize() {
@@ -107,10 +141,11 @@ export class VSCode {
       window.onresize = () => {
         this.editor.layout()
       }
-      this.editor.onDidScrollChange((e)=>this.MonacoScrollSync(e))
+      this.editor.onDidChangeModelContent((e)=>this.MonacoSync())
+      this.editor.onDidChangeCursorSelection((e)=>{this.MonacoSync()})
       if(this.option.preview === true) {
-        this.wrapper.preview.addEventListener("scroll", (e) => {
-          console.log('preview', e);
+        this.preview.addEventListener("scroll", (e) => {
+          // console.log('preview', e);
         })
       }
     }
@@ -118,7 +153,7 @@ export class VSCode {
   
 
   private async _doInitialize() {
-    loader.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs" }, 'vs/nls': { availableLanguages: { '*': 'ko' } } });
+    loader.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs" }, 'vs/nls': { availableLanguages: { '*': 'ko' }} });
     const { value, theme, language, height } = this.option;
     this.wrapper.parent.style.height = height;
     this.monaco = await loader.init();
@@ -168,12 +203,43 @@ export class VSCode {
     .use(()=>{
       return (tree, file) => {
         visit(tree, 'element', (node) => {
-          node.properties = {
-            ...node.properties,
-            "data-start-line" : node.position.start.line,
-            "data-start-column" : node.position.start.column,
-            "data-end-line" : node.position.end.line,
-            "data-end-column" : node.position.end.column,
+          if(['table', 'tbody', 'thead'].includes(node.tagName) === false) {
+            node.properties = {
+              ...node.properties,
+              "data-start-line" : node.position.start.line,
+              "data-start-column" : node.position.start.column,
+              "data-end-line" : node.position.end.line,
+              "data-end-column" : node.position.end.column,
+            }
+          }
+          if(['code', 'pre'].includes(node.tagName) === true) {
+            // console.log('asdf', node);
+            node.children.map((children)=>{
+              if(children.type === 'element') {
+                setTimeout(() => {
+                  children.children?.forEach((child)=>{
+                    const code = this.wrapper.preview.querySelector(`[data-start-line="${children.position.start.line}"]:not(table)`);
+                    console.log('code', code, children.position.start);
+                    // this.monaco.editor.colorizeElement(code as HTMLElement, {tabSize : 2});
+                    const text = this.monaco.editor.colorizeModelLine(this.editor.getModel(), children.position.start.line + 1);
+                    code.innerHTML = text;
+                    console.log('text', text);
+                    // this.monaco.editor.colorize((child as any).value, 'javascript', {tabSize : 2}).then((row)=>{
+                    //   if(code) {
+                    //     code.innerHTML = row;
+                    //   }
+                    // }); 
+                  })
+                }, 3000);
+                // children = ({
+                //   ...children,
+                //   type : "element",
+                //   tagName : "code",
+                //   value : 'tq',
+                //   position : node.position,
+                // }) as any
+              }
+            })
           }
         })
       }
