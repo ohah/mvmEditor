@@ -1,0 +1,4 @@
+.markdown-body .isFocus {
+  background : rgba(180, 180, 106, 0.5) !important;
+  border-radius: 0.25rem;
+}
