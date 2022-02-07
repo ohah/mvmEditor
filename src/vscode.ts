@@ -97,6 +97,9 @@ export class VSCode {
     this.preview.style.overflowX = "hidden";
     this.preview.style.height = "100%";
     this.wrapper.preview.classList.add('markdown-body');
+    if(this.option.markdownStyle.indexOf("dark") !== -1) {
+      this.wrapper.preview.classList.add('dark');
+    }
     this.wrapper.parent.appendChild(this.wrapper.editor);
     this.wrapper.parent.appendChild(this.wrapper.preview);
     this.wrapper.preview.appendChild(this.preview);
@@ -118,8 +121,6 @@ export class VSCode {
         between : end - start === 0 ? Array.from({length : 1}, ()=> start) : Array.from({length : end + 1 - start}, (v, i)=> i + start),
       }
     })
-    // console.log('list', list);
-    const preview = this.wrapper.preview.querySelector(`[data-start-line="${lineNumber}"]:not(table)`);
     const between = list.find((data) => {
       const { between, node } = data;
       if(between.includes(lineNumber)) {
@@ -128,30 +129,19 @@ export class VSCode {
     })
     // console.log(line, _oldScrollTop - scrollTop > 0, between)
     if(between) {
+      between.node.scrollIntoView({behavior: "auto", block:"end", inline: "end"});
       const isFocus = this.preview.querySelector('.isFocus');
       if(isFocus) isFocus.classList.remove('isFocus');
       between.node.classList.add('isFocus');
-      between.node.scrollIntoView({behavior: "auto", block:"end", inline: "end"});
     } 
   }
 
   public async initialize() {
     if (this.monaco === undefined) {
       await this._doInitialize();
-      window.onresize = () => {
-        this.editor.layout()
-      }
-      this.editor.onDidChangeModelContent((e)=>this.MonacoSync())
-      this.editor.onDidChangeCursorSelection((e)=>{this.MonacoSync()})
-      if(this.option.preview === true) {
-        this.preview.addEventListener("scroll", (e) => {
-          // console.log('preview', e);
-        })
-      }
     }
   }
   
-
   private async _doInitialize() {
     loader.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs" }, 'vs/nls': { availableLanguages: { '*': 'ko' }} });
     const { value, theme, language, height } = this.option;
@@ -163,7 +153,18 @@ export class VSCode {
       theme: theme,
       scrollBeyondLastLine: false,
     })
-    this.editor.onDidChangeModelContent((e)=>this.Viewer(e));
+    this.editor.onDidChangeModelContent(async (e)=>{
+      await this.Viewer(e);
+      await this.MonacoSync();
+    });
+    this.editor.onDidChangeCursorSelection((e)=>{this.MonacoSync()})
+    if(this.option.preview === true) {
+      this.preview.addEventListener("scroll", (e) => {
+      })
+    }
+    window.onresize = () => {
+      this.editor.layout()
+    }
     await setMonaco(this.monaco, language, theme);
     this.addmarkdownStyle(this.option.markdownStyle);
     if(value) {this.Viewer()}
@@ -193,7 +194,8 @@ export class VSCode {
    * @param e monaco.editor.IModelContentChangedEvent
    */
   private async Viewer(e?:monaco.editor.IModelContentChangedEvent) {    
-    const html = unified()
+    const highlight = [];
+    const html = await unified()
     .data('seetings', {fragment : true})
     .use(remarkParse)
     .use(remarkRehype)
@@ -213,31 +215,22 @@ export class VSCode {
             }
           }
           if(['code', 'pre'].includes(node.tagName) === true) {
-            // console.log('asdf', node);
             node.children.map((children)=>{
               if(children.type === 'element') {
-                setTimeout(() => {
-                  children.children?.forEach((child)=>{
+                children.children?.forEach((child)=>{
+                  if(child) {
                     const code = this.wrapper.preview.querySelector(`[data-start-line="${children.position.start.line}"]:not(table)`);
-                    console.log('code', code, children.position.start);
-                    // this.monaco.editor.colorizeElement(code as HTMLElement, {tabSize : 2});
-                    const text = this.monaco.editor.colorizeModelLine(this.editor.getModel(), children.position.start.line + 1);
-                    code.innerHTML = text;
-                    console.log('text', text);
-                    // this.monaco.editor.colorize((child as any).value, 'javascript', {tabSize : 2}).then((row)=>{
-                    //   if(code) {
-                    //     code.innerHTML = row;
-                    //   }
-                    // }); 
-                  })
-                }, 3000);
-                // children = ({
-                //   ...children,
-                //   type : "element",
-                //   tagName : "code",
-                //   value : 'tq',
-                //   position : node.position,
-                // }) as any
+                    const length = (child as any).value.split('\n').filter(row=>{if(row) return row}).length; //text line개수 구하기
+                    let text = '';
+                    for (let i = 0; i < length; i++) {
+                      text += this.monaco.editor.colorizeModelLine(this.editor.getModel(), children.position.start.line + 1 + i)+"\n";                      
+                    }
+                    highlight.push({
+                      startline : children.position.start.line,
+                      text : text
+                    })
+                  }
+                })
               }
             })
           }
@@ -247,6 +240,9 @@ export class VSCode {
     .processSync(this.editor.getValue())
     .toString();
     this.preview.innerHTML = html;
+    highlight.forEach(code => {
+      this.preview.querySelector(`[data-start-line="${code.startline}"]:not(table)`).innerHTML = code.text;
+    });
   }
   
   /**
@@ -281,94 +277,6 @@ export class VSCode {
     .processSync(this.editor.getValue())
     .toString()
     return mark;
-
-    const html = await unified()
-    .use(remarkParse)
-    .use(remarkRehype)
-    .use(()=>{
-      return (tree) => {
-        tree.children.map((children)=>{
-          if(children.type === "inlineCode") {
-            console.log('씨바"')
-          }
-        })
-        return tree;
-        // eslint-disable-next-line
-        visit(tree, 'element', (node:any) => {
-          if(node.tagName === 'code') {
-            let html = '';
-            const className = node.properties && node.properties.className;
-            const { start , end } = node.position;
-            const lang = className.map((cls)=> {
-              if(cls.slice(0, 5) === 'lang-') {
-                return cls.slice(5)
-              }
-              if(cls.slice(0, 9) === 'language-') {
-                return cls.slice(9)
-              }
-            }).join('')
-            if(!lang) {
-              return false;
-            }
-            let k = 0;         
-            const childrens = [];
-            node.children.forEach((children)=>{
-              if(children.value && lang) {
-                const text = children.value.split('\n');
-                for(let i = start.line + 1; i < end.line; i++) {
-                  const div = document.createElement('div');
-                  const high = monaco.editor.colorizeModelLine(this.editor.getModel(), i);
-                  html += high;
-                  div.insertAdjacentHTML('beforeend', high);
-                  // spans.replaceWith(...spans.childNodes as any)
-                  // console.log('spans', spans);
-                  const highlight = div.querySelectorAll('span');
-                  console.log('spans', div, highlight);
-
-                  highlight.forEach(span => {
-                    const element = {
-                      type : "element",
-                      tagName : "span",
-                      properties : {
-                        className : [span.className]
-                      },
-                      children : [
-                        {type:'text', value : span.textContent}
-                      ]
-                    }
-                    if(span.className) {
-                      childrens.push(element)
-                    }
-                  });
-                  childrens.push({
-                    type : 'element',
-                    tagName : 'span',
-                    properties : {},
-                    children : [
-                      {type:'text', value : '\n'}
-                    ]
-                  });
-                }
-              }
-            })
-            // console.log(childrens);
-            // console.log(node);
-            node = {
-              type : 'text',
-              value : `<pre class="language-${lang}"><code>${html}</code></pre>`
-            }
-            console.log(node);
-          }
-        })
-      }
-    })
-    .use(rehypeFormat) // 추가
-    .use(rehypeStringify)
-    .processSync(this.editor.getValue())
-    .toString();
-    // console.log(this.option);
-    // setMonaco(this.monaco, this.option.language, this.option.theme);
-    return html;
   }
 
   /**
@@ -383,6 +291,5 @@ export class VSCode {
     .use(rehypeRemark)
     .use(remarkStringify)
     .processSync(await this.getHtml())
-    console.log(markdown);
   }
 }
