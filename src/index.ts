@@ -4,47 +4,54 @@ import { VSCode } from "./vscode";
   const editor = await new VSCode({
     element : "#container",
     value : `
-  # 1
-  ## 2
-  ### 삼번 ㅁㄴㅇㄹ
-  #### 4
-  ##### 5
-  ###### 6
-  \`\`\`javascript
-  const vscode = new Vscode();
-  console.log('asdf');
-  \`\`\`
-  ㅁㄴㅇㄹ
-  ㅁㄴㅇㄻㄴㅇㄹ
-  asdfㅁㄴㅇㄹ
-  ㅁㄴㅇㄹ
-  asdf
-  ㅁㄴㅇㄹ
-  asdf
-  ![](https://i.esdrop.com/d/dLd7n17hg9.png)
-  asdㅁㄴㅇ
-  fadsf
-  asdf
-  rasdrasdrasd
-  fadsfasdf
-  asdfasdffasdffrasdrasdsdf
-  asdf
-  asdfasdffasdffrasdrasd
+# 제목 1
 
-  asddfd![](https://i.esdrop.com/d/dLd7n17hg9.png)
-  asdfasdffasdfrsdarasdrsad
 
-  모또 키asdf키타이 꼬또가 하아나또니
-  asdfasdf
-  asdsdfasdf
-  asdfasdffasdf
+### 제목 3
 
-  g
-  g
-  g
 
-  다따까우용~
-  '''`,
+##### 제목 5
+
+본문내용  스페이스 두번 개행  
+스페이스 두번 후 리얼 그냥 개행
+그냥개행쓰 
+\`\`\`javascript
+const editor = await new VSCode({
+  element: "#container",
+  value : "test";
+})
+\`\`\`
+
+\`
+그냥 코드블럭 테스트입니다.
+달달하다
+\`
+
+| 테이블 | 제목 | 제목 |
+| --- | --- | --- |
+| 행1   | 무야 | 리얼 |
+| 행2   | 무야 | 리얼 |
+| 행3   | 무야 | 리얼 |
+| 행4   | 무야 | 리얼 |
+| 행5   | 무야 | 리얼 |
+| 행6   | 무야 | 리얼 |
+| 행7   | 무야 | 리얼 |
+| 행8   | 무야 | 리얼 |
+| 행9   | 무야 | 리얼 |
+| 행10   | 무야 | 리얼 |
+| 행12  | 무야 | 리얼 |
+| 행13   | 무야 | 리얼 |
+| 행14   | 무야 | 리얼 |
+| 행15   | 무야 | 리얼 |
+| 행16   | 무야 | 리얼 |
+
+# 다시 코드불낙
+\`\`\`
+이게 불나기양?
+어? 불낙이냐고
+\`\`\`
+`,
+
   });
   editor.initialize();
   // console.log('test', await editor.getHtml());
