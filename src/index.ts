@@ -3,7 +3,21 @@ import { VSCode } from "./vscode";
 (async () => {
   const editor = await new VSCode({
     element : "#container",
+    theme:"vs-dark",
+    markdownStyle : "github-dark",
     value : `
+\`\`\`mermaid
+graph LR
+A(입력)-->B[연산]
+B-->C(출력)
+\`\`\`
+
+\`\`\`sequence
+Alice->Bob: Hello Bob, how are you?
+Note right of Bob: Bob thinks
+Bob-->Alice: I am good thanks!
+\`\`\`
+
 # 제목 1
 
 
