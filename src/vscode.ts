@@ -19,6 +19,10 @@ import rehypeRaw from 'rehype-raw'
 import rehypeSanitize, {defaultSchema} from 'rehype-sanitize'
 import remarkStringify from 'remark-stringify';
 import rehypeSlug from 'rehype-slug'
+import remarkMath from "remark-math";
+import rehypeKatex from 'rehype-katex'
+
+import { remarkMermaid } from "remark-mermaidjs"
 import {is} from 'unist-util-is'
 import {toText} from 'hast-util-to-text'
 
@@ -200,18 +204,23 @@ export class VSCode {
     .use(remarkParse)
     .use(remarkRehype)
     .use(remarkGfm)
+    .use(remarkMath)
+    .use(rehypeKatex)
+    // .use(reamrkMermaid)
     .use(rehypeStringify)
     .use(rehypeSlug)
     .use(()=>{
       return (tree, file) => {
         visit(tree, 'element', (node) => {
           if(['table', 'tbody', 'thead'].includes(node.tagName) === false) {
-            node.properties = {
-              ...node.properties,
-              "data-start-line" : node.position.start.line,
-              "data-start-column" : node.position.start.column,
-              "data-end-line" : node.position.end.line,
-              "data-end-column" : node.position.end.column,
+            if(node.position) {
+              node.properties = {
+                ...node.properties,
+                "data-start-line" : node.position.start.line,
+                "data-start-column" : node.position.start.column,
+                "data-end-line" : node.position.end.line,
+                "data-end-column" : node.position.end.column,
+              }
             }
           }
           if(['code', 'pre'].includes(node.tagName) === true) {
