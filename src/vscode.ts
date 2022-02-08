@@ -146,6 +146,17 @@ export class VSCode {
     }
   }
   
+  /**
+   * Image hook demo code
+   */
+  public async imageHook() {
+    const selection = this.editor.getSelection();
+    const id = { majonr : 1, minor : 1}
+    const imageText = `\n![image](https://uicdn.toast.com/toastui/img/tui-editor-bi.png)`;
+    const op = {identifier: id, range: selection, text: imageText, forceMoveMarkers: true};
+    this.editor.executeEdits("my-source", [op]);
+  }
+
   private async _doInitialize() {
     loader.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs" }, 'vs/nls': { availableLanguages: { '*': 'ko' }} });
     const { value, theme, language, height } = this.option;
@@ -156,6 +167,15 @@ export class VSCode {
       language: language,
       theme: theme,
       scrollBeyondLastLine: false,
+    })
+    this.editor.addAction({
+      id : "ImageUpload",
+      label : "Image Upload",
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.5,
+      run : (ed) => {
+        this.imageHook();
+      }
     })
     this.editor.onDidChangeModelContent(async (e)=>{
       await this.Viewer(e);
