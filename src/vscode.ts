@@ -73,13 +73,14 @@ export class VSCode {
   private MARKDOWN_LINE_HEIGHT = 19;
   /* 모나코 에디터 라인 높이(단위 px) */
   constructor (option:Option) {
+    console.log(this.option.preview, option);
     this.option = {
       element : option.element ? option.element : this.option.element,
       value : option.value ? option.value : this.option.value,
       height : option.height ? option.height : this.option.height,
       theme : option.theme ? option.theme : this.option.theme,
       language : option.language ? option.language : this.option.language,
-      preview : option.preview ? option.preview : this.option.preview,
+      preview : option.preview === false ? option.preview : this.option.preview,
       markdownStyle : option.markdownStyle ? option.markdownStyle : this.option.markdownStyle,
     }
     this.wrapper = {
@@ -105,8 +106,10 @@ export class VSCode {
       this.wrapper.preview.classList.add('dark');
     }
     this.wrapper.parent.appendChild(this.wrapper.editor);
-    this.wrapper.parent.appendChild(this.wrapper.preview);
-    this.wrapper.preview.appendChild(this.preview);
+    if(this.option.preview === true) {
+      this.wrapper.parent.appendChild(this.wrapper.preview);
+      this.wrapper.preview.appendChild(this.preview);
+    }
   }  
   /**
    * 편집시 싱크.
@@ -169,14 +172,31 @@ export class VSCode {
       scrollBeyondLastLine: false,
     })
     this.editor.addAction({
-      id : "ImageUpload",
+      id : "이미지 업로드",
       label : "Image Upload",
       contextMenuGroupId: 'navigation',
       contextMenuOrder: 1.5,
       run : (ed) => {
         this.imageHook();
       }
-    })
+    });
+    this.editor.addAction({
+      id : "preveiw on/off",
+      label : "미리보기 열기/닫기",
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.5,
+      run : (ed) => {
+        if(this.option.preview === false) {
+          this.wrapper.parent.appendChild(this.wrapper.preview);
+          this.wrapper.preview.appendChild(this.preview);
+          this.option.preview = true;
+        }else if(this.option.preview === true) {
+          this.option.preview = false;
+          this.wrapper.preview.remove();
+          this.preview.remove();
+        }
+      }
+    });
     this.editor.onDidChangeModelContent(async (e)=>{
       await this.Viewer(e);
       await this.MonacoSync();

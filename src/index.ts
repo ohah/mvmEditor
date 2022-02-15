@@ -5,6 +5,7 @@ import { VSCode } from "./vscode";
     element : "#container",
     theme:"vs-dark",
     markdownStyle : "github-dark",
+    preview : false,
     value : `
 Lift($L$) can be determined by Lift Coefficient ($C_L$) like the following
 equation.
