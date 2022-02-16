@@ -6,15 +6,18 @@ Created By Ohah https://github.com/ohah/mvmEditor
 
 ```javascript
 (async () => {
-  const editor = await new VSCode({
+  const editor = new VSCode({
     element : "#container",
     theme:"vs-dark",
     markdownStyle : "github-dark",
     preview : false,
     imageUpload : function (files) {
-      console.log(files);
+      /** return @param url
+       * next version fix
+       * this version is not use code, this is demo code
+       **/
       return new Promise(function(resolve, reject) {
-        resolve('tq');
+        resolve({url:"https://i.ytimg.com/vi/-6Zjub7CH4k/hqdefault.jpg?sqp=-oaymwEbCKgBEF5IVfKriqkDDggBFQAAiEIYAXABwAEG&rs=AOn4CLAM-HI1vYmSnVudZ8D9osES4dn5dw"});
       });
     },
     value : ``,
@@ -28,7 +31,9 @@ Created By Ohah https://github.com/ohah/mvmEditor
 interface Option{
   element:HTMLInputElement
   value?:string
+  html?:boolean /* markdown === false, html === true */
   height?:string /* defalut 500px */
+  path?:string /* editor path */
   theme? : "vs" | "vs-dark" /* defalut vs */
   language? : "markdown" | "javascript" | "typescript" | "python" | "cpp" | "c" | "php" // defalut markdown\
   preview:boolean //only use language markdown
@@ -42,9 +47,9 @@ interface Option{
 | Function | Document | 
 | ---------| -------- |
 | initialize() | editor initialize |
-| getValue():Promise<string> | editor getValue |
+| getValue():string | editor getValue |
 | setValue(value:string) | editor setValue |
-| getHtml():Promise<string> |  Markdown to Html |
+| getHtml():string |  Markdown to Html |
 | setHtml(value:string |  Html to markdown string |
 
 ### LICENSE
