@@ -1,4 +1,4 @@
-import { VSCode } from "./vscode";
+import VSCode from "./vscode";
 
 (async () => {
   const editor = await new VSCode({
