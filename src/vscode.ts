@@ -49,7 +49,9 @@ interface CustomIScrollEvent extends monaco.IScrollEvent{
 }
 interface Option {
   element : string
+  path?:string,
   value?:string
+  html?:boolean
   theme?:Theme
   height?:string
   language?:Languages
@@ -58,11 +60,13 @@ interface Option {
   imageUpload?:(e:FileList)=>Promise<any> | undefined
 }
 
-export class VSCode {
+export default class VSCode {
   private monaco:typeof monaco;
   private option:Option = {
     element : 'container',
+    path:'',
     value : 'Hello World',
+    html : false,
     theme : 'vs-dark',
     height : "500px",
     language : 'markdown',
@@ -82,7 +86,9 @@ export class VSCode {
   constructor (option:Option) {
     this.option = {
       element : option.element ? option.element : this.option.element,
+      path : option.path ? option.path : this.option.path,
       value : option.value ? option.value : this.option.value,
+      html : option.html ? option.html : this.option.html,
       height : option.height ? option.height : this.option.height,
       theme : option.theme ? option.theme : this.option.theme,
       language : option.language ? option.language : this.option.language,
@@ -176,12 +182,37 @@ export class VSCode {
     const { value, theme, language, height } = this.option;
     this.wrapper.parent.style.height = height;
     this.monaco = await loader.init();
-    this.editor = this.monaco.editor.create(this.wrapper.editor, {
-      value: value,
-      language: language,
-      theme: theme,
-      scrollBeyondLastLine: false,
-    })
+    if(this.option.html === true) {
+      const markdown = unified()
+      .use(rehypeParse, {
+        fragment : true,
+        emitParseErrors: true, // Emit all.
+        missingWhitespaceBeforeDoctypeName: 2, // Mark one as a fatal error.
+        nonVoidHtmlElementStartTagWithTrailingSolidus: false // Ignore one.
+      })
+      .use(remarkFrontmatter)
+      .use(remarkGfm)
+      // .use(remarkMath)
+      // .use(rehypeKatex)
+      .use(rehypeFormat)
+      .use(rehypeRemark)
+      .use(remarkStringify)
+      .processSync(value)
+      .toString();
+      this.editor = this.monaco.editor.create(this.wrapper.editor, {
+        value: markdown,
+        language: language,
+        theme: theme,
+        scrollBeyondLastLine: false,
+      })
+    }else {
+      this.editor = this.monaco.editor.create(this.wrapper.editor, {
+        value: value,
+        language: language,
+        theme: theme,
+        scrollBeyondLastLine: false,
+      })
+    }
     this.editor.addAction({
       id : "Image Upload",
       label : "이미지 업로드",
@@ -221,7 +252,7 @@ export class VSCode {
     window.onresize = () => {
       this.editor.layout()
     }
-    await setMonaco(this.monaco, language, theme);
+    await setMonaco(this.monaco, language, theme, this.option.path);
     this.addmarkdownStyle(this.option.markdownStyle);
     if(value) {this.Viewer()}
   }
@@ -234,13 +265,13 @@ export class VSCode {
       link.id   = cssId;
       link.rel  = 'stylesheet';
       link.type = 'text/css';
-      link.href = `./css/${style}.css`;
+      link.href = `${this.option.path ? this.option.path : '.'}/css/${style}.css`;
       link.media = 'all';
       head.appendChild(link);
     } else {
       const link = document.getElementById(cssId) as HTMLLinkElement;
       if(link.tagName === "LINK") {
-        link.href = `./css/${style}.css`;
+        link.href = `${this.option.path ? this.option.path : '.'}/css/${style}.css`;
       }
     }
   }
@@ -263,7 +294,6 @@ export class VSCode {
     .use(rehypeSlug)
     .use(()=>{
       return (tree, file) => {
-        console.log(tree);
         visit(tree, 'element', (node) => {
           if(['table', 'tbody', 'thead'].includes(node.tagName) === false) {
             if(node.position) {
@@ -311,9 +341,9 @@ export class VSCode {
    * 에디터 값 가져오기
    * @returns language string
    */
-  public async getValue():Promise<string> {
-    await this.initialize();
-    return await this.editor.getValue();
+  public getValue():string {
+    // await this.initialize();
+    return this.editor.getValue();
   }
 
   /**
@@ -322,17 +352,16 @@ export class VSCode {
    */
   public async setValue(value:string):Promise<void> {
     await this.initialize();
-    this.editor.setValue(value);
+    await this.editor.setValue(value);
   }
 
   /**
    * markdown to html
    * @returns html(string)
    */
-  public async getHtml():Promise<string> {
-    await this.initialize();
-    const highlight = [];
-    const html = await unified()
+  public getHtml():string {
+    // await this.initialize();
+    const html = unified()
     .data('seetings', {fragment : true})
     .use(remarkParse)
     .use(remarkRehype)
@@ -344,10 +373,7 @@ export class VSCode {
     .processSync(this.editor.getValue())
     .toString();
     const result = document.createElement('div');
-    result.innerHTML = html;
-    highlight.forEach(code => {
-      result.querySelector(`[data-start-line="${code.startline}"]:not(table)`).innerHTML = code.text;
-    });
+    result.innerHTML = html;    
     return result.innerHTML;
   }
 
@@ -371,12 +397,9 @@ export class VSCode {
     .use(rehypeFormat)
     .use(rehypeRemark)
     .use(remarkStringify)
-    .use(()=>{
-      return (tree, node) => {
-        console.log(tree);
-      }
-    })
-    .processSync(await this.getHtml())
+    .processSync(value)
     .toString();
+
+    await this.editor.setValue(markdown)
   }
 }
