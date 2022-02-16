@@ -12,7 +12,7 @@ export const setMonaco = async (monaco:Monaco, language: string, theme:"vs-dark"
   } catch (e) {
   }
   await monaco.languages.register({ id: language });
-  const { registry, grammars } = getJSON(language);
+  const { registry, grammars } = getJSON(language, path);
   // validation settings
   monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
     noSemanticValidation: true,
