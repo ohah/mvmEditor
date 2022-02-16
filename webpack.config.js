@@ -4,10 +4,14 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const webpack = require('webpack')
 module.exports = {
-  entry: "./src/index.ts", // 번들링 시작 위치
+  // entry: "./src/index.ts", // 번들링 시작 위치
+  entry: "./src/vscode.ts", // 번들링 시작 위치
   output: {
     path: path.join(__dirname, "/dist"), // 번들 결과물 위치
     filename: "bundle.js",
+    library: 'VSCode',
+    libraryTarget: 'window',
+    libraryExport: 'default'
   },
   experiments: {
     asyncWebAssembly: true,
@@ -80,5 +84,6 @@ module.exports = {
     host: "localhost", // live-server host 및 port
     port: 5500,
   },
-  mode: "development", // 번들링 모드 development / production
+  // mode: "development", // 번들링 모드 development / production
+  mode: "production", // 번들링 모드 development / production
 };
