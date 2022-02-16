@@ -21,6 +21,7 @@ import remarkStringify from 'remark-stringify';
 import rehypeSlug from 'rehype-slug'
 import remarkMath from "remark-math";
 import rehypeKatex from 'rehype-katex'
+import remarkFrontmatter from 'remark-frontmatter'
 
 import { remarkMermaid } from "remark-mermaidjs"
 import {is} from 'unist-util-is'
@@ -79,7 +80,6 @@ export class VSCode {
   private MARKDOWN_LINE_HEIGHT = 19;
   /* 모나코 에디터 라인 높이(단위 px) */
   constructor (option:Option) {
-    console.log(this.option.preview, option);
     this.option = {
       element : option.element ? option.element : this.option.element,
       value : option.value ? option.value : this.option.value,
@@ -206,6 +206,7 @@ export class VSCode {
           this.wrapper.preview.remove();
           this.preview.remove();
         }
+        this.editor.layout();
       }
     });
     this.editor.onDidChangeModelContent(async (e)=>{
@@ -248,20 +249,21 @@ export class VSCode {
    * 미리보기
    * @param e monaco.editor.IModelContentChangedEvent
    */
-  private async Viewer(e?:monaco.editor.IModelContentChangedEvent) {    
+  public async Viewer(e?:monaco.editor.IModelContentChangedEvent) {    
     const highlight = [];
     const html = await unified()
     .data('seetings', {fragment : true})
     .use(remarkParse)
     .use(remarkRehype)
     .use(remarkGfm)
-    .use(remarkMath)
-    .use(rehypeKatex)
+    // .use(remarkMath)
+    // .use(rehypeKatex)
     // .use(reamrkMermaid)
     .use(rehypeStringify)
     .use(rehypeSlug)
     .use(()=>{
       return (tree, file) => {
+        console.log(tree);
         visit(tree, 'element', (node) => {
           if(['table', 'tbody', 'thead'].includes(node.tagName) === false) {
             if(node.position) {
@@ -329,14 +331,24 @@ export class VSCode {
    */
   public async getHtml():Promise<string> {
     await this.initialize();
-    const mark = unified()
+    const highlight = [];
+    const html = await unified()
+    .data('seetings', {fragment : true})
     .use(remarkParse)
     .use(remarkRehype)
+    .use(remarkGfm)
+    // .use(remarkMath)
+    // .use(rehypeKatex)
     .use(rehypeStringify)
     .use(rehypeSlug)
     .processSync(this.editor.getValue())
-    .toString()
-    return mark;
+    .toString();
+    const result = document.createElement('div');
+    result.innerHTML = html;
+    highlight.forEach(code => {
+      result.querySelector(`[data-start-line="${code.startline}"]:not(table)`).innerHTML = code.text;
+    });
+    return result.innerHTML;
   }
 
   /**
@@ -346,10 +358,25 @@ export class VSCode {
   public async setHtml(value:string):Promise<void>{
     await this.initialize();
     const markdown = unified()
-    .use(rehypeParse, {fragment : false})
+    .use(rehypeParse, {
+      fragment : true,
+      emitParseErrors: true, // Emit all.
+      missingWhitespaceBeforeDoctypeName: 2, // Mark one as a fatal error.
+      nonVoidHtmlElementStartTagWithTrailingSolidus: false // Ignore one.
+    })
+    .use(remarkFrontmatter)
+    .use(remarkGfm)
+    // .use(remarkMath)
+    // .use(rehypeKatex)
     .use(rehypeFormat)
     .use(rehypeRemark)
     .use(remarkStringify)
+    .use(()=>{
+      return (tree, node) => {
+        console.log(tree);
+      }
+    })
     .processSync(await this.getHtml())
+    .toString();
   }
 }

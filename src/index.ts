@@ -5,7 +5,7 @@ import { VSCode } from "./vscode";
     element : "#container",
     theme:"vs-dark",
     markdownStyle : "github-dark",
-    preview : false,
+    preview : true,
     imageUpload : function (files) {
       console.log(files);
       return new Promise(function(resolve, reject) {
@@ -13,13 +13,6 @@ import { VSCode } from "./vscode";
       });
     },
     value : `
-Lift($L$) can be determined by Lift Coefficient ($C_L$) like the following
-equation.
-
-$$
-L = \\frac{1}{2} \rho v^2 S C_L
-$$
-
 \`\`\`mermaid
 graph LR
 A(입력)-->B[연산]
@@ -74,7 +67,7 @@ const editor = await new VSCode({
 | 행16   | 무야 | 리얼 |
 
 # 다시 코드불낙
-\`\`\`
+\`\`\`aaa
 이게 불나기양?
 어? 불낙이냐고
 \`\`\`
@@ -82,11 +75,5 @@ const editor = await new VSCode({
 
   });
   editor.initialize();
-  // console.log('test', await editor.getHtml());
-  // await editor.setHtml("tq");
-  // const editor2 = new VSCode({
-  //   element : '#con',
-  //   height:"300px",
-  // });
-  // await editor2.initialize();
+  // document.getElementById('viewer').innerHTML = await editor.getHtml();
 })();
