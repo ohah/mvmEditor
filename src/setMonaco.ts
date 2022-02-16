@@ -6,9 +6,9 @@ import { getJSON } from "./getJSON";
 import { vslight } from "./theme/vslight";
 import { vsdark } from "./theme/vsdark";
 
-export const setMonaco = async (monaco:Monaco, language: string, theme:"vs-dark" | "vs" | "solarized-dark") => {
+export const setMonaco = async (monaco:Monaco, language: string, theme:"vs-dark" | "vs" | "solarized-dark", path?:string) => {
   try {
-    await loadWASM(`/extensions/onigasm.wasm`);
+    await loadWASM(`${path}/extensions/onigasm.wasm`);
   } catch (e) {
   }
   await monaco.languages.register({ id: language });
@@ -26,11 +26,11 @@ export const setMonaco = async (monaco:Monaco, language: string, theme:"vs-dark"
   });
   if(theme === "vs") {
     await monaco.editor.defineTheme(theme, vslight);
-    const ITheme:IThemeObject = await (await fetch('/extensions/theme-defaults/themes/light_vs.json')).json();
+    const ITheme:IThemeObject = await (await fetch(`${path}/extensions/theme-defaults/themes/light_vs.json`)).json();
     await updateTheme(monaco, "vs", "light", ITheme);
   }else if(theme === "solarized-dark") {
     await monaco.editor.defineTheme("solarized-dark", vsdark);
-    const ITheme:IThemeObject = await (await fetch('/extensions/theme-solarized-dark/themes/solarized-dark-color-theme.json')).json();
+    const ITheme:IThemeObject = await (await fetch(`${path}/extensions/theme-solarized-dark/themes/solarized-dark-color-theme.json`)).json();
     await updateTheme(monaco, "solarized-dark", "dark", ITheme);
   }else {
     await monaco.editor.defineTheme(theme, vsdark);
