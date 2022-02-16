@@ -35,6 +35,11 @@ type Languages = "markdown" | "javascript" | "typescript" | "python" | "cpp" | "
 type Theme = "vs-dark" | "vs"
 type MarkdownStyle = "github" | "github-dark" | "github-light"
 
+interface Images {
+  code:string
+  url?:string
+  name?:string
+}
 interface CustomIScrollEvent extends monaco.IScrollEvent{
   readonly _oldScrollHeight:number
   readonly _oldScrollLeft:number
@@ -49,8 +54,8 @@ interface Option {
   language?:Languages
   preview?:boolean
   markdownStyle? : MarkdownStyle
+  imageUpload?:(e:FileList)=>Promise<any> | undefined
 }
-type IScrollEvent = monaco.IScrollEvent;
 
 export class VSCode {
   private monaco:typeof monaco;
@@ -70,6 +75,7 @@ export class VSCode {
   }
   private editor:monaco.editor.IStandaloneCodeEditor;
   private preview:HTMLElement
+  private upload:HTMLInputElement;
   private MARKDOWN_LINE_HEIGHT = 19;
   /* 모나코 에디터 라인 높이(단위 px) */
   constructor (option:Option) {
@@ -82,7 +88,23 @@ export class VSCode {
       language : option.language ? option.language : this.option.language,
       preview : option.preview === false ? option.preview : this.option.preview,
       markdownStyle : option.markdownStyle ? option.markdownStyle : this.option.markdownStyle,
+      imageUpload : option.imageUpload ? option.imageUpload : undefined,
     }
+    this.upload = document.createElement("input");
+    this.upload.addEventListener('change', (e)=>{
+      this.option.imageUpload((e.target as HTMLInputElement).files).then((row)=>{
+        if(row.url) {
+          const selection = this.editor.getSelection();
+          const id = { majonr : 1, minor : 1}
+          const imageText = `\n![image](${row.url})`;
+          const op = {identifier: id, range: selection, text: imageText, forceMoveMarkers: true};
+          this.editor.executeEdits("my-source", [op]);
+        }
+      }).then(()=>{
+        this.upload.value = '';
+      });
+    })
+    this.upload.type = "file";
     this.wrapper = {
       editor : document.createElement('div'),
       preview:  document.createElement('div'),
@@ -149,17 +171,6 @@ export class VSCode {
     }
   }
   
-  /**
-   * Image hook demo code
-   */
-  public async imageHook() {
-    const selection = this.editor.getSelection();
-    const id = { majonr : 1, minor : 1}
-    const imageText = `\n![image](https://uicdn.toast.com/toastui/img/tui-editor-bi.png)`;
-    const op = {identifier: id, range: selection, text: imageText, forceMoveMarkers: true};
-    this.editor.executeEdits("my-source", [op]);
-  }
-
   private async _doInitialize() {
     loader.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs" }, 'vs/nls': { availableLanguages: { '*': 'ko' }} });
     const { value, theme, language, height } = this.option;
@@ -172,12 +183,12 @@ export class VSCode {
       scrollBeyondLastLine: false,
     })
     this.editor.addAction({
-      id : "이미지 업로드",
-      label : "Image Upload",
+      id : "Image Upload",
+      label : "이미지 업로드",
       contextMenuGroupId: 'navigation',
       contextMenuOrder: 1.5,
       run : (ed) => {
-        this.imageHook();
+        this.upload.click();
       }
     });
     this.editor.addAction({

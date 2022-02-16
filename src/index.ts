@@ -6,6 +6,12 @@ import { VSCode } from "./vscode";
     theme:"vs-dark",
     markdownStyle : "github-dark",
     preview : false,
+    imageUpload : function (files) {
+      console.log(files);
+      return new Promise(function(resolve, reject) {
+        resolve('tq');
+      });
+    },
     value : `
 Lift($L$) can be determined by Lift Coefficient ($C_L$) like the following
 equation.
