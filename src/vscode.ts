@@ -65,7 +65,7 @@ export default class VSCode {
   private option:Option = {
     element : 'container',
     path:'',
-    value : 'Hello World',
+    value : '',
     html : false,
     theme : 'vs-dark',
     height : "500px",
