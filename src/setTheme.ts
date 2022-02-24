@@ -189,7 +189,7 @@ export async function updateSnippets(monaco: Monaco, langauge: languageType) {
  * @param type The base type of the theme.
  * @param values The actual theme values.
  */
-export function updateTheme(monaco: Monaco, theme: string, type: "light" | "dark", values: IThemeObject): void {
+export function updateTheme(monaco: Monaco, theme: string, type: "vs" | "vs-dark", values: IThemeObject): void {
   // Convert all color values to CSS hex form.
   const entries: { [key: string]: string } = {};
   for (const [key, value] of Object.entries(values.colors || {})) {
@@ -210,11 +210,10 @@ export function updateTheme(monaco: Monaco, theme: string, type: "light" | "dark
   });
 
   monaco.editor.defineTheme(theme, {
-    base: type === "light" ? "vs" : "vs-dark",
+    base: type === "vs" ? "vs" : "vs-dark",
     inherit: true,
     rules: tokenRules,
     colors: entries,
   });
-
   monaco.editor.setTheme(theme);
 }
