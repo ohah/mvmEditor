@@ -1,3 +1,7 @@
+:root {
+  --wrapper-border-color:rgba(221, 221, 221,1 );
+  --wrapper-border-dark-color:rgba(78, 78, 78, 1 );
+}
 .markdown-body.dark .isFocus {
   background : rgba(180, 180, 106, 0.5) !important;
   border-radius: 0.25rem;
@@ -45,4 +49,22 @@
 .markdown-body :nth-child(1)::-webkit-scrollbar-thumb {
   opacity: 0;  
   transition: opacity .8s linear;
+}
+.mobile-btn{border:0;background:transparent;padding:0.25rem 0.75rem;cursor: pointer;}
+.mobile-btn:focus{outline:0;border:0;}
+.mvm-wrapper .mobile-menu.menu-dark{
+  border-bottom:1px solid var(--wrapper-border-dark-color);
+}
+.mvm-wrapper .mobile-menu {
+  border-bottom:1px solid var(--wrapper-border-color);
+}
+.mvm-wrapper{
+  border:1px solid var(--wrapper-border-color)
+}
+.mvm-wrapper .menu-dark button:hover{
+  background:rgba(57, 57, 57, 1);
+}
+.mvm-wrapper .menu-dark button svg {color:#fff;}
+.mvm-wrapper .menu-dark {
+  background: #0d1117;
 }
