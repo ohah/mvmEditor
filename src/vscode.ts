@@ -31,6 +31,8 @@ import {toText} from 'hast-util-to-text'
 // import "URL";
 import remarkPresetLintMarkdownStyleGuide from 'remark-preset-lint-markdown-style-guide'
 import { visit } from 'unist-util-visit'
+import { codeIcon, moonIcon, sunIcon, uploadIcon } from './icon';
+
 
 type Languages = "markdown" | "javascript" | "typescript" | "python" | "cpp" | "c" | "php"
 type Theme = "vs-dark" | "vs"
@@ -58,6 +60,7 @@ interface Option {
   preview?:boolean
   markdownStyle? : MarkdownStyle
   imageUpload?:(e:FileList)=>Promise<any> | undefined
+  mobile?:boolean
 }
 
 export default class VSCode {
@@ -72,16 +75,26 @@ export default class VSCode {
     language : 'markdown',
     markdownStyle : "github-dark",
     preview:true,
+    mobile:false,
   }
   private wrapper : {
     parent:HTMLElement
     editor:HTMLElement
     preview:HTMLElement
+    mobile:HTMLElement,
+    body:HTMLElement,
+    header:HTMLElement,
   }
   private editor:monaco.editor.IStandaloneCodeEditor;
   private preview:HTMLElement
   private upload:HTMLInputElement;
+  private menu : {
+    imageupload : HTMLElement,
+    preview : HTMLElement,
+    theme : HTMLElement,
+  }
   private MARKDOWN_LINE_HEIGHT = 19;
+  private CSS_ID = 'MarkdownStyleCss';  // you could encode the css path itself to generate id..
   /* 모나코 에디터 라인 높이(단위 px) */
   constructor (option:Option) {
     this.option = {
@@ -94,6 +107,7 @@ export default class VSCode {
       language : option.language ? option.language : this.option.language,
       preview : option.preview === false ? option.preview : this.option.preview,
       markdownStyle : option.markdownStyle ? option.markdownStyle : this.option.markdownStyle,
+      mobile : option.mobile ? option.mobile : this.option.mobile,
       imageUpload : option.imageUpload ? option.imageUpload : undefined,
     }
     this.upload = document.createElement("input");
@@ -114,10 +128,33 @@ export default class VSCode {
     this.wrapper = {
       editor : document.createElement('div'),
       preview:  document.createElement('div'),
-      parent : document.querySelector(this.option.element) ? document.querySelector(this.option.element) : document.createElement('div')
+      parent : document.querySelector(this.option.element) ? document.querySelector(this.option.element) : document.createElement('div'),
+      mobile : document.createElement('div'),
+      body : document.createElement('div'),
+      header : document.createElement('header'),
     }
+    this.menu = {
+      imageupload : document.createElement('button'),
+      preview : document.createElement('button'),
+      theme : document.createElement('button'),
+    }
+    Object.values(this.menu).forEach((button:HTMLButtonElement) => {
+      button.classList.add('mobile-btn');
+      button.type = "button";
+    });
+    this.wrapper.parent.classList.add('mvm-wrapper');
+    this.wrapper.mobile.classList.add("mobile-menu");
+    this.wrapper.mobile.classList.add(this.option.theme === "vs" ? "" : "menu-dark");
+    this.menu.imageupload.appendChild(uploadIcon());
+    this.menu.imageupload.addEventListener("click", ()=>{this.upload.click()})
+    this.menu.preview.appendChild(codeIcon());
+    this.menu.preview.addEventListener("click", ()=>{this.togglePreview()})
+    this.menu.theme.appendChild(this.option.theme === "vs-dark" ? sunIcon() : moonIcon())
+    this.menu.theme.addEventListener("click", ()=>{this.themeChange()})
+    this.wrapper.header.classList.add('menu-');
+    this.wrapper.body.classList.add('body-');
     this.preview = document.createElement('div');
-    this.wrapper.parent.style.display = "flex";
+    this.wrapper.body.style.display = "flex";
     this.wrapper.editor.style.width = "50%";
     this.wrapper.editor.style.height = "100%";
     this.wrapper.editor.style.display = "flex";
@@ -129,13 +166,21 @@ export default class VSCode {
     this.preview.style.overflowY = "auto";
     this.preview.style.overflowX = "hidden";
     this.preview.style.height = "100%";
+    this.wrapper.parent.appendChild(this.wrapper.header);
+    this.wrapper.parent.appendChild(this.wrapper.body);
     this.wrapper.preview.classList.add('markdown-body');
+    if(this.option.mobile === true) {
+      Object.values(this.menu).forEach((button:HTMLButtonElement) => {
+        this.wrapper.mobile.appendChild(button);  
+      });
+      this.wrapper.header.appendChild(this.wrapper.mobile);
+    }
     if(this.option.markdownStyle.indexOf("dark") !== -1) {
       this.wrapper.preview.classList.add('dark');
     }
-    this.wrapper.parent.appendChild(this.wrapper.editor);
+    this.wrapper.body.appendChild(this.wrapper.editor);
     if(this.option.preview === true) {
-      this.wrapper.parent.appendChild(this.wrapper.preview);
+      this.wrapper.body.appendChild(this.wrapper.preview);
       this.wrapper.preview.appendChild(this.preview);
     }
   }  
@@ -178,9 +223,9 @@ export default class VSCode {
   }
   
   private async _doInitialize() {
-    loader.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs" }, 'vs/nls': { availableLanguages: { '*': 'ko' }} });
+    loader.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.32.1/min/vs" }, 'vs/nls': { availableLanguages: { '*': 'ko' }} });
     const { value, theme, language, height } = this.option;
-    this.wrapper.parent.style.height = height;
+    this.wrapper.body.style.height = height;
     this.monaco = await loader.init();
     if(this.option.html === true) {
       const markdown = unified()
@@ -213,6 +258,7 @@ export default class VSCode {
         scrollBeyondLastLine: false,
       })
     }
+    
     this.editor.addAction({
       id : "Image Upload",
       label : "이미지 업로드",
@@ -228,16 +274,7 @@ export default class VSCode {
       contextMenuGroupId: 'navigation',
       contextMenuOrder: 1.5,
       run : (ed) => {
-        if(this.option.preview === false) {
-          this.wrapper.parent.appendChild(this.wrapper.preview);
-          this.wrapper.preview.appendChild(this.preview);
-          this.option.preview = true;
-        }else if(this.option.preview === true) {
-          this.option.preview = false;
-          this.wrapper.preview.remove();
-          this.preview.remove();
-        }
-        this.editor.layout();
+        this.togglePreview();
       }
     });
     this.editor.onDidChangeModelContent(async (e)=>{
@@ -256,20 +293,56 @@ export default class VSCode {
     this.addmarkdownStyle(this.option.markdownStyle);
     if(value) {this.Viewer()}
   }
-  
+  /**
+   * markdownChange
+   * @param theme MarkdownStyle "github" | "github-dark" | "github-theme"
+   */
+  public async themeChange () {
+    const toggleTheme:Theme =  this.option.theme === "vs" ? "vs-dark" : "vs";
+    const toggleStyle:MarkdownStyle =  this.option.theme === "vs" ? "github-dark" : "github-light";
+    setMonaco(this.monaco, this.option.language, toggleTheme, this.option.path);
+    this.addmarkdownStyle(toggleStyle);
+    this.option.theme = toggleTheme;
+    this.menu.theme.innerHTML = toggleTheme === "vs" ? moonIcon().outerHTML : sunIcon().outerHTML;
+    this.option.markdownStyle = toggleStyle;
+    if (toggleTheme === "vs") {
+      this.wrapper.mobile.classList.remove('menu-dark');
+    } else {
+      this.wrapper.mobile.classList.add('menu-dark');
+    }
+  }
+  /**
+   * 미리보기 토글
+   */
+  public togglePreview () {
+    if(this.option.preview === false) {
+      this.wrapper.body.appendChild(this.wrapper.preview);
+      this.wrapper.preview.appendChild(this.preview);
+      this.option.preview = true;
+    }else if(this.option.preview === true) {
+      this.option.preview = false;
+      this.wrapper.preview.remove();
+      this.preview.remove();
+    }
+    this.editor.layout();
+  }
+
+  /**
+   * 마크다운 스타일
+   * @param style Markdown;
+   */
   private addmarkdownStyle (style:MarkdownStyle) {
-    const cssId = 'MarkdownStyleCss';  // you could encode the css path itself to generate id..
-    if (!document.getElementById(cssId)) {
+    if (!document.getElementById(this.CSS_ID)) {
       const head  = document.getElementsByTagName('head')[0];
       const link  = document.createElement('link');
-      link.id   = cssId;
+      link.id   = this.CSS_ID;
       link.rel  = 'stylesheet';
       link.type = 'text/css';
       link.href = `${this.option.path ? this.option.path : '.'}/css/${style}.css`;
       link.media = 'all';
       head.appendChild(link);
     } else {
-      const link = document.getElementById(cssId) as HTMLLinkElement;
+      const link = document.getElementById(this.CSS_ID) as HTMLLinkElement;
       if(link.tagName === "LINK") {
         link.href = `${this.option.path ? this.option.path : '.'}/css/${style}.css`;
       }
