@@ -13,6 +13,7 @@ import VSCode from "./vscode";
       });
     },
     value : ``,
+    mobile:true,
   });
   editor.initialize();
   // document.getElementById('viewer').innerHTML = await editor.getHtml();
